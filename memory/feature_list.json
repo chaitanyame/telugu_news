@@ -423,10 +423,10 @@
       "name": "Add Manual Workflow Dispatch",
       "description": "Add workflow_dispatch inputs to all workflows for manual testing",
       "priority": "medium",
-      "passes": false,
+      "passes": true,
       "test_file": null,
       "test_fails_before": false,
-      "test_passes_after": false,
+      "test_passes_after": true,
       "steps": [
         "Update process-9pm-news.yml with workflow_dispatch inputs",
         "Add input: date (optional) - Process specific date",
