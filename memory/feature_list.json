@@ -49,10 +49,10 @@
       "name": "Define JSON Schema and Validator",
       "description": "Create validator functions to ensure JSON files have correct structure and valid data formats",
       "priority": "high",
-      "passes": false,
+      "passes": true,
       "test_file": "tests/backend/test_validators.py",
-      "test_fails_before": false,
-      "test_passes_after": false,
+      "test_fails_before": true,
+      "test_passes_after": true,
       "steps": [
         "Create test file tests/backend/test_validators.py",
         "Write tests for validate_news_file function (expect failure)",
