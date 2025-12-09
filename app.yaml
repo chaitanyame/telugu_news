@@ -1,0 +1,10 @@
+runtime: python311
+entrypoint: gunicorn -b :$PORT api.app:app
+
+handlers:
+- url: /api/.*
+  script: auto
+
+- url: /.*
+  static_files: index.html
+  upload: index.html

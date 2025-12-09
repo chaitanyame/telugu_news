@@ -1,0 +1,35 @@
+{
+  "name": "telugu-news-aggregator",
+  "version": "1.0.0",
+  "description": "ETV Telugu News Aggregator - Automated news aggregation with AI summarization",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "api:dev": "cd api && python3 app.py",
+    "api:prod": "cd api && gunicorn app:app --bind 0.0.0.0:5000",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "build": "echo 'Static site - no build required'",
+    "clean": "find data -name '*.json' -mtime +30 -delete",
+    "validate": "python3 -m json.tool data/index.json > /dev/null && echo 'JSON valid'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chaitanyame/telugu_news.git"
+  },
+  "keywords": [
+    "telugu",
+    "news",
+    "aggregator",
+    "etv",
+    "youtube",
+    "gemini",
+    "ai"
+  ],
+  "author": "chaitanyame",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
