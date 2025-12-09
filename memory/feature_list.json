@@ -30,7 +30,7 @@
       "name": "Setup Python Environment",
       "description": "Create Python requirements file with all necessary dependencies for backend processing",
       "priority": "high",
-      "passes": false,
+      "passes": true,
       "test_file": null,
       "test_fails_before": false,
       "test_passes_after": false,

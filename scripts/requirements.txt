@@ -1,0 +1,16 @@
+# Python dependencies for ETV Telugu News Aggregator backend
+
+# YouTube Data API
+google-api-python-client==2.100.0
+
+# Google Gemini API
+google-generativeai==0.3.0
+
+# HTTP requests
+requests==2.31.0
+
+# Retry logic with exponential backoff
+tenacity==8.2.3
+
+# Testing framework
+pytest==7.4.0
