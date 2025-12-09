@@ -6,8 +6,8 @@ This file bridges context between agent sessions. Each agent reads this at the s
 
 **Project**: ETV Telugu News Aggregator Automation
 **Branch**: 001-etv-news-aggregator-automation
-**Status**: In Progress - Frontend Foundation Complete (Features 1-23)
-**Features**: 23/45 complete (51.1%)
+**Status**: In Progress - Data Loading Complete (Features 1-24)
+**Features**: 24/45 complete (53.3%)
 **Last Updated**: 2025-12-09
 
 ## What's Been Done
@@ -26,6 +26,86 @@ This is a **template repository** for building long-lived agents. It includes:
 - ✅ **Issue tracking system** - adhoc bugs, hotfixes, and requests
 
 ## Session History
+
+### Session 8 - 2025-12-09 (Part 6)
+
+**Feature**: Data Loader Utility (Feature #28)
+**Branch**: 001-etv-news-aggregator-automation
+**Status**: ✅ Complete
+
+#### Accomplished
+- **Feature #28**: Create Data Loader Utility
+  - **TDD RED Phase**:
+    - Created `tests/frontend/test_data_loader.spec.ts` with 9 tests
+    - Ran tests: ALL 9 FAILED (as expected - DataLoader undefined)
+    - Tests used Playwright's route mocking for fetch interception
+    - Tested both success and error scenarios
+  
+  - **TDD GREEN Phase**:
+    - Created `js/utils/data-loader.js` (119 lines) with:
+      - **IIFE Module Pattern**: Encapsulated functionality
+      - **fetchIndex()**: 
+        - Fetches `/data/index.json` with cache busting
+        - Returns `{dates: [], last_updated: '', error?: string}`
+        - Handles network errors gracefully
+      - **fetchNewsForDate(date)**:
+        - Fetches `/data/{date}.json` with cache busting
+        - Returns `{date: string, news: [], error?: string}`
+        - Handles 404 errors (missing dates)
+        - Handles malformed JSON
+      - **fetchNewsForDates(dates)**:
+        - Batch fetch using Promise.all
+        - Useful for loading multiple dates
+      - **fetchLatestNews()**:
+        - Gets most recent date from index
+        - Fetches that date's news
+        - Helper function for initial load
+      - **Cache Busting**: `?t=${Date.now()}` on all requests
+      - **Error Handling**: Try/catch with fallback data
+      - **Global Export**: `window.DataLoader` for app access
+    
+    - Updated `index.html`:
+      - Added `<script src=\"js/utils/data-loader.js\"></script>`
+      - Loaded before main.js to ensure availability
+    
+    - Ran tests: ALL 9 PASSED ✅
+    - Ran all frontend tests: 25/25 PASSED ✅
+
+#### Tests Created (9 tests)
+1. **fetchIndex function available**: window.DataLoader.fetchIndex exists
+2. **fetchNewsForDate function available**: window.DataLoader.fetchNewsForDate exists
+3. **Fetch index.json successfully**: Mock 200 response with dates array
+4. **Handle index.json fetch errors**: Network failure returns fallback
+5. **Fetch news for specific date**: Mock news file with data
+6. **Handle news fetch errors**: Network failure returns fallback
+7. **Cache busting timestamp**: Verify ?t= parameter in request URL
+8. **Handle 404 errors**: Missing news files return empty array
+9. **Handle malformed JSON**: Parse errors return fallback
+
+#### Key Design Decisions
+- **IIFE Pattern**: Prevents global namespace pollution
+- **No External Dependencies**: Pure JavaScript, no libraries
+- **Async/Await**: Clean promise handling
+- **Graceful Degradation**: Never throws, always returns data
+- **Cache Busting**: Prevents browser caching of JSON files
+- **Error Properties**: `error` field indicates failure without crashing
+- **Console Logging**: Errors logged for debugging
+
+#### Session Summary
+- **Total Features**: 1 feature implemented (28)
+- **Tests Added**: 9 Playwright tests (all passing)
+- **Total Frontend Tests**: 25 tests (7 HTML + 9 accessibility + 9 data loader)
+- **Files Created**: 2 (data-loader.js, test_data_loader.spec.ts)
+- **Files Modified**: 2 (index.html, feature_list.json)
+- **Commits**: 1 commit pushed
+- **Progress**: 24/45 complete (53.3%)
+
+#### Next Steps
+Features #29-32: Interactive Components
+- localStorage caching for performance (Feature #29)
+- Sidebar date list component (Feature #30)
+- News display component (Feature #31)
+- Filter components for date/slot (Feature #32)
 
 ### Session 8 - 2025-12-09 (Part 5)
 
