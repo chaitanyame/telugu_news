@@ -6,8 +6,8 @@ This file bridges context between agent sessions. Each agent reads this at the s
 
 **Project**: ETV Telugu News Aggregator Automation
 **Branch**: 001-etv-news-aggregator-automation
-**Status**: In Progress - CLI and Logging Complete (Features 1-16)
-**Features**: 16/45 complete (35.6%)
+**Status**: In Progress - GitHub Actions Automation Complete (Features 1-19)
+**Features**: 19/45 complete (42.2%)
 **Last Updated**: 2025-12-09
 
 ## What's Been Done
@@ -26,6 +26,71 @@ This is a **template repository** for building long-lived agents. It includes:
 - ✅ **Issue tracking system** - adhoc bugs, hotfixes, and requests
 
 ## Session History
+
+### Session 8 - 2025-12-09 (Part 3)
+
+**Feature**: GitHub Actions Workflows (Features #17-19)
+**Branch**: 001-etv-news-aggregator-automation
+**Status**: ✅ Complete
+
+#### Accomplished
+- **Feature #17**: 9 PM News Workflow (`.github/workflows/process-9pm-news.yml`)
+  - Cron schedule: `30 3 * * *` (9:00 AM IST daily)
+  - workflow_dispatch with date and force inputs
+  - Steps: Checkout dev, Python 3.11 setup, install deps, process news
+  - Uses CLI: `python -m scripts.process_daily_news --slot 9pm`
+  - Auto-commit changes with github-actions[bot]
+  - Uploads workflow logs as artifacts (7 day retention)
+
+- **Feature #18**: 7 AM News Workflow (`.github/workflows/process-7am-news.yml`)
+  - Cron schedule: `30 17 * * *` (11:00 PM IST daily)
+  - Same structure as 9 PM workflow
+  - Uses CLI: `python -m scripts.process_daily_news --slot 7am`
+  - Separate artifact naming for isolation
+
+- **Feature #19**: Weekly Cleanup Workflow (`.github/workflows/cleanup-old-data.yml`)
+  - Cron schedule: `0 0 * * 0` (Sunday midnight UTC)
+  - workflow_dispatch with days_to_keep and dry_run inputs
+  - Steps: Cleanup old files, regenerate index, commit/push
+  - Uses CLI: `python -m scripts.cleanup --days 30`
+  - Cleanup summary artifacts (30 day retention)
+
+- **Enhancement**: Added CLI to `scripts/cleanup.py`
+  - main() entry point with argparse
+  - `--days` argument (default: 30)
+  - `--dry-run` flag for testing
+  - Statistics output: deleted, kept, errors
+  - Exit codes: 0 (success), 1 (failure)
+
+#### Workflow Features
+- All workflows target dev branch
+- Python 3.11 with pip caching
+- Conditional commit/push (only if files changed)
+- Manual trigger support via GitHub UI
+- Structured JSON logging captured in artifacts
+- Error handling with always() conditions
+- Secrets: YOUTUBE_API_KEY, GEMINI_API_KEY
+
+#### Files Created
+1. `.github/workflows/process-9pm-news.yml` (85 lines)
+2. `.github/workflows/process-7am-news.yml` (85 lines)
+3. `.github/workflows/cleanup-old-data.yml` (87 lines)
+
+#### Files Modified
+1. `scripts/cleanup.py` - Added main() and argparse CLI
+2. `memory/feature_list.json` - Marked Features #17-19 complete
+
+#### Testing
+- Manual verification: `python -m scripts.cleanup --help`
+- Workflows ready for GitHub UI manual trigger testing
+- Automated runs will start on schedule
+
+#### Next Steps
+Feature #20-30: Frontend components, API endpoints, deployment
+- HTML/CSS templates for news display
+- JavaScript for filtering and pagination
+- Flask/FastAPI REST API
+- Responsive design
 
 ### Session 8 - 2025-12-09 (Part 2)
 
