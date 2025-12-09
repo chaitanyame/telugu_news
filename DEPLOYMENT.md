@@ -16,32 +16,42 @@ This application can be deployed to various static hosting platforms. It consist
 
 ## Deployment Options
 
-### Option 1: GitHub Pages (Recommended)
+### Option 1: GitHub Pages (Recommended for This Project)
 
-**Pros**: Free, automatic deployment, good performance
-**Cons**: Public repositories only for free tier
+**Pros**: 
+- Free, unlimited bandwidth
+- Automatic deployment on push to dev branch
+- Perfect for static sites with GitHub Actions backend
+- No server configuration needed
+- Built-in SSL/HTTPS
+- Fast global CDN
+
+**Cons**: 
+- Public repositories only for free tier
+- Static files only (perfect for our use case!)
 
 #### Steps:
 
 1. **Enable GitHub Pages**:
-   ```bash
-   # Go to Settings > Pages
-   # Source: Deploy from branch
-   # Branch: Select 'dev' and '/ (root)'
-   # Click Save
+   - Go to Settings > Pages in your repository
+   - Source: Deploy from branch
+   - Branch: Select `dev` and `/ (root)`
+   - Click Save
+
+2. **Wait 1-2 minutes** for first deployment
+
+3. **Your site is live!**
+   ```
+   https://chaitanyame.github.io/telugu_news/
    ```
 
-2. **Configure Base Path** (if using project site):
-   ```javascript
-   // Update js/utils/data-loader.js
-   const BASE_PATH = '/telugu_news/data'; // Add repo name
-   ```
-
-3. **Deploy**:
+4. **Future updates are automatic**:
    ```bash
    git push origin dev
-   # Site will be available at: https://chaitanyame.github.io/telugu_news/
+   # Site updates in ~1 minute
    ```
+
+**No configuration needed!** The data loader uses relative paths (`/data/`) which work perfectly on GitHub Pages.
 
 4. **Custom Domain** (optional):
    - Add CNAME file with your domain

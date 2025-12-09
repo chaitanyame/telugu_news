@@ -1,6 +1,21 @@
-# Agent Harness Framework
+# ETV Telugu News Aggregator
 
-A template repository for building **long-lived autonomous agents** within VS Code GitHub Copilot, based on [Anthropic's "Effective Harnesses for Long-Running Agents"](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents).
+**Automated Telugu news aggregation and summarization from ETV Telugu YouTube channel**
+
+🔗 **Live Demo**: https://chaitanyame.github.io/telugu_news/ *(Enable GitHub Pages in Settings to deploy)*
+
+Built using the Agent Harness Framework based on [Anthropic's "Effective Harnesses for Long-Running Agents"](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents).
+
+---
+
+## Overview
+
+This project automatically:
+- 📺 Fetches ETV Telugu news videos from YouTube (9 PM & 7 AM bulletins)
+- 🤖 Summarizes content using Google Gemini AI
+- 📝 Generates Telugu summaries with key points
+- 🌐 Displays in a responsive web interface
+- ⚡ Updates automatically via GitHub Actions
 
 ## The Problem
 

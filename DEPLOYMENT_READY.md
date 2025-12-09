@@ -40,7 +40,9 @@
 
 ## Quick Start Deployment
 
-### Option 1: GitHub Pages (Static Frontend Only)
+### GitHub Pages (Recommended)
+
+**Why GitHub Pages?** This project uses GitHub Actions for backend automation, so you don't need a separate API server. All data is generated as static JSON files that GitHub Pages serves perfectly.
 
 1. **Enable GitHub Pages**:
    - Go to repository Settings
@@ -54,9 +56,12 @@
    https://chaitanyame.github.io/telugu_news/
    ```
 
-3. **Note**: API endpoints won't work on GitHub Pages. Use for frontend testing only.
+3. **That's it!** GitHub Actions will:
+   - Fetch news daily (9 PM & 7 AM IST)
+   - Generate JSON files in `data/` directory
+   - Automatically update your live site
 
-### Option 2: Vercel (Recommended - Full Stack)
+### Alternative: Vercel/Netlify (If you want the Flask API)
 
 1. **Install Vercel CLI**:
    ```bash
