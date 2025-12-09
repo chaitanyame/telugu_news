@@ -269,10 +269,10 @@
       "name": "Implement Data Cleanup Script",
       "description": "Create script to delete files older than 30 days",
       "priority": "medium",
-      "passes": false,
+      "passes": true,
       "test_file": "tests/backend/test_cleanup.py",
-      "test_fails_before": false,
-      "test_passes_after": false,
+      "test_fails_before": true,
+      "test_passes_after": true,
       "steps": [
         "Create test file tests/backend/test_cleanup.py",
         "Write tests for cleanup operations (expect failure)",
