@@ -291,10 +291,10 @@
       "name": "Create Main Processing Script",
       "description": "Integrate all components into main orchestration pipeline",
       "priority": "high",
-      "passes": false,
+      "passes": true,
       "test_file": "tests/backend/test_process_daily_news.py",
-      "test_fails_before": false,
-      "test_passes_after": false,
+      "test_fails_before": true,
+      "test_passes_after": true,
       "steps": [
         "Create test file tests/backend/test_process_daily_news.py",
         "Write end-to-end tests with mocked APIs (expect failure)",
