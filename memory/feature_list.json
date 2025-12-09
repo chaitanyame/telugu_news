@@ -72,10 +72,10 @@
       "name": "Create Configuration Manager",
       "description": "Create configuration module with all constants and environment variable loading",
       "priority": "high",
-      "passes": false,
+      "passes": true,
       "test_file": "tests/backend/test_config.py",
-      "test_fails_before": false,
-      "test_passes_after": false,
+      "test_fails_before": true,
+      "test_passes_after": true,
       "steps": [
         "Create test file tests/backend/test_config.py",
         "Write tests for configuration constants and env loading (expect failure)",
