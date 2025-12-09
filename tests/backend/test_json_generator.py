@@ -10,7 +10,8 @@ from unittest.mock import Mock, patch, mock_open
 from scripts.json_generator import (
     load_or_create_news_file,
     save_news_file,
-    update_news_slot
+    update_news_slot,
+    generate_index
 )
 
 
@@ -144,3 +145,81 @@ class TestUpdateNewsSlot:
         
         with pytest.raises(ValueError, match="Invalid slot"):
             update_news_slot(data, "invalid_slot", [], {})
+
+
+class TestGenerateIndex:
+    """Test generate_index function"""
+    
+    @patch('os.walk')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('os.path.exists')
+    def test_generate_index_success(self, mock_exists, mock_file, mock_walk):
+        """Test generating index from archive files"""
+        # Mock directory structure
+        mock_walk.return_value = [
+            ('data/archive/2025-01', [], ['2025-01-15.json', '2025-01-16.json']),
+            ('data/archive/2025-01', [], [])
+        ]
+        
+        # Mock file contents
+        file_data_1 = {
+            "date": "2025-01-15",
+            "slots": {
+                "9pm": {"video_id": "abc12345678", "summary": ["test"]},
+                "7am": None
+            }
+        }
+        file_data_2 = {
+            "date": "2025-01-16",
+            "slots": {
+                "9pm": None,
+                "7am": {"video_id": "def12345678", "summary": ["test"]}
+            }
+        }
+        
+        mock_exists.return_value = True
+        mock_file.return_value.read.side_effect = [
+            json.dumps(file_data_1),
+            json.dumps(file_data_2)
+        ]
+        
+        generate_index()
+        
+        # Verify index.json was written
+        calls = [call for call in mock_file.call_args_list if 'index.json' in str(call)]
+        assert len(calls) > 0
+    
+    @patch('os.walk')
+    @patch('builtins.open', new_callable=mock_open)
+    def test_generate_index_empty_archive(self, mock_file, mock_walk):
+        """Test generating index with no archive files"""
+        mock_walk.return_value = []
+        
+        generate_index()
+        
+        # Should create empty index
+        calls = [call for call in mock_file.call_args_list if 'index.json' in str(call)]
+        assert len(calls) > 0
+    
+    @patch('os.walk')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('os.path.exists')
+    def test_generate_index_sorts_descending(self, mock_exists, mock_file, mock_walk):
+        """Test index sorts dates in descending order"""
+        mock_walk.return_value = [
+            ('data/archive/2025-01', [], ['2025-01-10.json', '2025-01-15.json', '2025-01-12.json'])
+        ]
+        
+        file_data = {
+            "date": "2025-01-10",
+            "slots": {"9pm": None, "7am": None}
+        }
+        
+        mock_exists.return_value = True
+        mock_file.return_value.read.return_value = json.dumps(file_data)
+        
+        generate_index()
+        
+        # Verify write was called
+        write_calls = [call for call in mock_file.call_args_list if 'index.json' in str(call)]
+        assert len(write_calls) > 0

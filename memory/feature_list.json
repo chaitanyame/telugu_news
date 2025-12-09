@@ -249,10 +249,10 @@
       "name": "Implement Index.json Generator",
       "description": "Create function to scan archive and build index of all available dates",
       "priority": "high",
-      "passes": false,
+      "passes": true,
       "test_file": "tests/backend/test_json_generator.py",
-      "test_fails_before": false,
-      "test_passes_after": false,
+      "test_fails_before": true,
+      "test_passes_after": true,
       "steps": [
         "Add tests for generate_index function (expect failure)",
         "Run pytest and verify tests FAIL",

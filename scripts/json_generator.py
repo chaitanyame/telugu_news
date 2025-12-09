@@ -5,10 +5,12 @@ This module provides functions to:
 1. Load or create news JSON files
 2. Save news data to archive
 3. Update news slots with video summaries
+4. Generate index of all available dates
 """
 
 import json
 import os
+import glob
 from datetime import datetime
 from typing import Dict, List, Optional
 from scripts.utils.validators import validate_news_file, validate_date_format
@@ -113,3 +115,59 @@ def update_news_slot(
     }
     
     return data
+
+
+def generate_index() -> None:
+    """
+    Generate index.json by scanning archive directory.
+    
+    Creates an index with:
+    - List of all dates with news files
+    - Available slots per date (9pm, 7am)
+    - Sorted in descending order (newest first)
+    
+    Saves to data/index.json
+    """
+    index_data = []
+    
+    # Scan archive directory
+    archive_path = "data/archive"
+    if os.path.exists(archive_path):
+        # Find all JSON files in archive
+        for root, dirs, files in os.walk(archive_path):
+            for file in files:
+                if file.endswith('.json'):
+                    file_path = os.path.join(root, file)
+                    
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                        
+                        # Extract date and available slots
+                        date = data.get("date")
+                        slots = data.get("slots", {})
+                        
+                        available_slots = []
+                        if slots.get("9pm") is not None:
+                            available_slots.append("9pm")
+                        if slots.get("7am") is not None:
+                            available_slots.append("7am")
+                        
+                        index_data.append({
+                            "date": date,
+                            "slots": available_slots
+                        })
+                    
+                    except (json.JSONDecodeError, KeyError):
+                        # Skip invalid files
+                        continue
+    
+    # Sort by date descending (newest first)
+    index_data.sort(key=lambda x: x["date"], reverse=True)
+    
+    # Save index
+    index_path = "data/index.json"
+    os.makedirs(os.path.dirname(index_path), exist_ok=True)
+    
+    with open(index_path, 'w', encoding='utf-8') as f:
+        json.dump(index_data, f, ensure_ascii=False, indent=2)
