@@ -14,7 +14,9 @@ This script orchestrates the entire pipeline:
 """
 
 import sys
+import argparse
 from typing import Dict
+from datetime import datetime
 from scripts.utils.config import get_youtube_api_key, get_gemini_api_key, ETV_CHANNEL_ID
 from scripts.utils.cache import is_video_processed, mark_video_processed
 from scripts.youtube_fetcher import get_youtube_api_client, search_channel_videos
@@ -27,13 +29,54 @@ from scripts.json_generator import (
 )
 
 
-def process_time_slot(time_slot: str, date: str) -> Dict:
+def parse_args():
+    """
+    Parse command-line arguments.
+    
+    Returns:
+        argparse.Namespace: Parsed arguments
+    """
+    parser = argparse.ArgumentParser(
+        description='Process ETV Telugu News for a specific time slot'
+    )
+    
+    parser.add_argument(
+        '--slot',
+        required=True,
+        choices=['9pm', '7am'],
+        help='Time slot to process (9pm or 7am)'
+    )
+    
+    parser.add_argument(
+        '--date',
+        default=datetime.now().strftime('%Y-%m-%d'),
+        help='Date to process in YYYY-MM-DD format (default: today)'
+    )
+    
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help='Force processing even if video already in cache'
+    )
+    
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Run without saving files (testing mode)'
+    )
+    
+    return parser.parse_args()
+
+
+def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: bool = False) -> Dict:
     """
     Process a single time slot for a specific date.
     
     Args:
         time_slot (str): Time slot ('9pm' or '7am')
         date (str): Date in YYYY-MM-DD format
+        force (bool): Force processing even if video already in cache
+        dry_run (bool): Run without saving files (testing mode)
     
     Returns:
         Dict: Processing result with status and details
@@ -41,12 +84,19 @@ def process_time_slot(time_slot: str, date: str) -> Dict:
     result = {
         "success": False,
         "time_slot": time_slot,
-        "date": date
+        "date": date,
+        "force": force,
+        "dry_run": dry_run
     }
     
     try:
         # Step 1: Load API keys
         print(f"[INFO] Processing {time_slot} slot for {date}")
+        if dry_run:
+            print("[INFO] Running in DRY-RUN mode (no files will be saved)")
+        if force:
+            print("[INFO] FORCE mode enabled (bypassing cache)")
+        
         youtube_api_key = get_youtube_api_key()
         gemini_api_key = get_gemini_api_key()
         
@@ -64,9 +114,9 @@ def process_time_slot(time_slot: str, date: str) -> Dict:
             result["message"] = f"Video not found for {time_slot} on {date}"
             return result
         
-        # Check if video already processed
+        # Check if video already processed (skip if force=True)
         video_id = video_data["video_id"]
-        if is_video_processed(video_id):
+        if not force and is_video_processed(video_id):
             print(f"[INFO] Video {video_id} already processed, skipping")
             result["success"] = True
             result["skipped"] = True
@@ -90,17 +140,26 @@ def process_time_slot(time_slot: str, date: str) -> Dict:
         print(f"[INFO] Updating {time_slot} slot")
         news_data = update_news_slot(news_data, time_slot, summaries, video_data)
         
-        # Step 7: Save news file
-        print(f"[INFO] Saving news file")
-        save_news_file(date, news_data)
+        # Step 7: Save news file (skip if dry_run)
+        if not dry_run:
+            print(f"[INFO] Saving news file")
+            save_news_file(date, news_data)
+        else:
+            print(f"[INFO] Skipping save (dry-run mode)")
         
-        # Step 8: Update index.json
-        print(f"[INFO] Updating index")
-        generate_index()
+        # Step 8: Update index.json (skip if dry_run)
+        if not dry_run:
+            print(f"[INFO] Updating index")
+            generate_index()
+        else:
+            print(f"[INFO] Skipping index update (dry-run mode)")
         
-        # Step 9: Mark video as processed
-        print(f"[INFO] Marking video as processed")
-        mark_video_processed(video_id, date)
+        # Step 9: Mark video as processed (skip if dry_run)
+        if not dry_run:
+            print(f"[INFO] Marking video as processed")
+            mark_video_processed(video_id, date)
+        else:
+            print(f"[INFO] Skipping cache update (dry-run mode)")
         
         print(f"[SUCCESS] Processing complete for {time_slot} on {date}")
         result["success"] = True
@@ -116,18 +175,15 @@ def process_time_slot(time_slot: str, date: str) -> Dict:
     return result
 
 
-def main(time_slot: str, date: str) -> int:
+def main() -> int:
     """
     Main entry point for processing script.
-    
-    Args:
-        time_slot (str): Time slot ('9pm' or '7am')
-        date (str): Date in YYYY-MM-DD format
     
     Returns:
         int: Exit code (0 for success, 1 for failure)
     """
-    result = process_time_slot(time_slot, date)
+    args = parse_args()
+    result = process_time_slot(args.slot, args.date, force=args.force, dry_run=args.dry_run)
     
     if result["success"]:
         return 0
@@ -136,13 +192,5 @@ def main(time_slot: str, date: str) -> int:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python process_daily_news.py <time_slot> <date>")
-        print("Example: python process_daily_news.py 9pm 2025-12-09")
-        sys.exit(1)
-    
-    time_slot = sys.argv[1]
-    date = sys.argv[2]
-    
-    exit_code = main(time_slot, date)
+    exit_code = main()
     sys.exit(exit_code)

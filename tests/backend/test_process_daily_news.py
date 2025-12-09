@@ -160,10 +160,11 @@ class TestMain:
             "summaries_count": 5
         }
         
-        result = main("9pm", "2025-12-09")
+        with patch('sys.argv', ['process_daily_news.py', '--slot', '9pm', '--date', '2025-12-09']):
+            result = main()
         
         assert result == 0
-        mock_process.assert_called_once_with("9pm", "2025-12-09")
+        mock_process.assert_called_once_with("9pm", "2025-12-09", force=False, dry_run=False)
     
     @patch('scripts.process_daily_news.process_time_slot')
     def test_main_failure(self, mock_process):
@@ -173,6 +174,7 @@ class TestMain:
             "error": "API error"
         }
         
-        result = main("9pm", "2025-12-09")
+        with patch('sys.argv', ['process_daily_news.py', '--slot', '9pm', '--date', '2025-12-09']):
+            result = main()
         
         assert result == 1
