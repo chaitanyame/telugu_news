@@ -1,0 +1,22 @@
+{
+  "name": "telugu-news-aggregator",
+  "version": "1.0.0",
+  "description": "ETV Telugu News Aggregator - Automated news fetching and display",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed"
+  },
+  "keywords": [
+    "telugu",
+    "news",
+    "etv",
+    "aggregator"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

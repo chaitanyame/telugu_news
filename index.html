@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ETV తెలుగు వార్తలు - రోజువారీ 9 PM మరియు 7 AM వార్తల సారాంశం">
+    <title>ETV తెలుగు వార్తలు | Telugu News Aggregator</title>
+    
+    <!-- Google Fonts for Telugu -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1 class="site-title">ETV తెలుగు వార్తలు</h1>
+            <p class="site-subtitle">రోజువారీ వార్తల సారాంశం</p>
+        </div>
+    </header>
+
+    <main>
+        <aside class="sidebar">
+            <section class="filter-section">
+                <h2>ఫిల్టర్లు</h2>
+                
+                <div class="filter-group">
+                    <h3>సమయం</h3>
+                    <label>
+                        <input type="checkbox" name="slot" value="9pm" checked>
+                        <span>9 PM వార్తలు</span>
+                    </label>
+                    <label>
+                        <input type="checkbox" name="slot" value="7am" checked>
+                        <span>7 AM వార్తలు</span>
+                    </label>
+                </div>
+
+                <div class="filter-group">
+                    <h3>తేదీ పరిధి</h3>
+                    <label for="date-from">నుండి:</label>
+                    <input type="date" id="date-from" name="date-from">
+                    
+                    <label for="date-to">వరకు:</label>
+                    <input type="date" id="date-to" name="date-to">
+                </div>
+
+                <button class="apply-filters-btn">ఫిల్టర్లు వర్తించండి</button>
+            </section>
+
+            <section class="stats-section">
+                <h2>గణాంకాలు</h2>
+                <div class="stat-item">
+                    <span class="stat-label">మొత్తం వార్తలు:</span>
+                    <span class="stat-value" id="total-news">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">9 PM:</span>
+                    <span class="stat-value" id="total-9pm">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">7 AM:</span>
+                    <span class="stat-value" id="total-7am">0</span>
+                </div>
+            </section>
+        </aside>
+
+        <article class="content">
+            <section class="news-header">
+                <h2>తాజా వార్తలు</h2>
+                <p class="news-description">ETV తెలుగు ఛానెల్ నుండి ప్రతిరోజు 9 PM మరియు 7 AM వార్తల సారాంశం</p>
+            </section>
+
+            <section class="news-list" id="news-list">
+                <div class="loading">
+                    <p>వార్తలు లోడ్ అవుతున్నాయి...</p>
+                </div>
+            </section>
+
+            <section class="pagination">
+                <button class="pagination-btn" id="prev-btn" disabled>← మునుపటిది</button>
+                <span class="page-info" id="page-info">పేజీ 1</span>
+                <button class="pagination-btn" id="next-btn" disabled>తర్వాతది →</button>
+            </section>
+        </article>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p class="footer-text">
+                ETV తెలుగు వార్తలు © <span id="current-year"></span>
+            </p>
+            <p class="footer-updated">
+                చివరిగా నవీకరించబడింది: <time id="last-updated" datetime="">--</time>
+            </p>
+            <p class="footer-info">
+                ఈ సైట్ స్వయంచాలకంగా ETV తెలుగు ఛానెల్ నుండి వార్తలను సేకరిస్తుంది
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+</body>
+</html>
