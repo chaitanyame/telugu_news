@@ -15,8 +15,10 @@ This script orchestrates the entire pipeline:
 
 import sys
 import argparse
+import logging
+import json
 from typing import Dict
-from datetime import datetime
+from datetime import datetime, timezone
 from scripts.utils.config import get_youtube_api_key, get_gemini_api_key, ETV_CHANNEL_ID
 from scripts.utils.cache import is_video_processed, mark_video_processed
 from scripts.youtube_fetcher import get_youtube_api_client, search_channel_videos
@@ -27,6 +29,67 @@ from scripts.json_generator import (
     save_news_file,
     generate_index
 )
+
+
+class JSONFormatter(logging.Formatter):
+    """
+    Custom JSON formatter for structured logging.
+    Outputs logs in JSON format for easy parsing by GitHub Actions.
+    """
+    
+    def format(self, record):
+        log_data = {
+            "timestamp": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno
+        }
+        
+        # Add extra fields if provided
+        if hasattr(record, 'video_id'):
+            log_data['video_id'] = record.video_id
+        if hasattr(record, 'slot'):
+            log_data['slot'] = record.slot
+        if hasattr(record, 'date'):
+            log_data['date'] = record.date
+        if hasattr(record, 'error_type'):
+            log_data['error_type'] = record.error_type
+        if hasattr(record, 'retry_count'):
+            log_data['retry_count'] = record.retry_count
+        
+        # Add exception info if present
+        if record.exc_info:
+            log_data['exception'] = self.formatException(record.exc_info)
+        
+        return json.dumps(log_data)
+
+
+def setup_logging():
+    """
+    Configure structured JSON logging for GitHub Actions.
+    
+    Returns:
+        logging.Logger: Configured logger instance
+    """
+    logger = logging.getLogger('process_daily_news')
+    logger.setLevel(logging.INFO)
+    
+    # Remove existing handlers to avoid duplicates
+    logger.handlers.clear()
+    
+    # Create console handler for stdout
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    
+    # Set JSON formatter
+    formatter = JSONFormatter()
+    handler.setFormatter(formatter)
+    
+    logger.addHandler(handler)
+    
+    return logger
 
 
 def parse_args():
@@ -81,6 +144,8 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
     Returns:
         Dict: Processing result with status and details
     """
+    logger = setup_logging()
+    
     result = {
         "success": False,
         "time_slot": time_slot,
@@ -91,24 +156,24 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
     
     try:
         # Step 1: Load API keys
-        print(f"[INFO] Processing {time_slot} slot for {date}")
+        logger.info("Processing time slot", extra={"slot": time_slot, "date": date})
         if dry_run:
-            print("[INFO] Running in DRY-RUN mode (no files will be saved)")
+            logger.info("Running in DRY-RUN mode", extra={"slot": time_slot})
         if force:
-            print("[INFO] FORCE mode enabled (bypassing cache)")
+            logger.info("FORCE mode enabled", extra={"slot": time_slot})
         
         youtube_api_key = get_youtube_api_key()
         gemini_api_key = get_gemini_api_key()
         
         # Step 2: Check if already processed (we'll check this after finding the video)
-        print(f"[INFO] Searching for video...")
+        logger.info("Searching for video", extra={"slot": time_slot, "date": date})
         
         # Step 3: Search YouTube for video
         youtube_client = get_youtube_api_client(youtube_api_key)
         video_data = search_channel_videos(youtube_client, ETV_CHANNEL_ID, time_slot, date)
         
         if video_data is None:
-            print(f"[INFO] No video found for {time_slot} on {date}")
+            logger.info("Video not found", extra={"slot": time_slot, "date": date})
             result["success"] = True
             result["video_found"] = False
             result["message"] = f"Video not found for {time_slot} on {date}"
@@ -117,58 +182,58 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
         # Check if video already processed (skip if force=True)
         video_id = video_data["video_id"]
         if not force and is_video_processed(video_id):
-            print(f"[INFO] Video {video_id} already processed, skipping")
+            logger.info("Video already processed, skipping", extra={"video_id": video_id, "slot": time_slot})
             result["success"] = True
             result["skipped"] = True
             result["video_id"] = video_id
             result["message"] = f"Video {video_id} already processed"
             return result
         
-        print(f"[INFO] Found video: {video_id}")
+        logger.info("Found video", extra={"video_id": video_id, "slot": time_slot})
         
         # Step 4: Get Gemini summary
-        print(f"[INFO] Generating summary with Gemini...")
+        logger.info("Generating summary with Gemini", extra={"video_id": video_id})
         video_url = f"https://www.youtube.com/watch?v={video_id}"
         summaries = get_gemini_summary(video_url, gemini_api_key)
-        print(f"[INFO] Generated {len(summaries)} summaries")
+        logger.info("Generated summaries", extra={"video_id": video_id, "count": len(summaries)})
         
         # Step 5: Load or create news file
-        print(f"[INFO] Loading news file for {date}")
+        logger.info("Loading news file", extra={"date": date})
         news_data = load_or_create_news_file(date)
         
         # Step 6: Update news slot
-        print(f"[INFO] Updating {time_slot} slot")
+        logger.info("Updating news slot", extra={"slot": time_slot})
         news_data = update_news_slot(news_data, time_slot, summaries, video_data)
         
         # Step 7: Save news file (skip if dry_run)
         if not dry_run:
-            print(f"[INFO] Saving news file")
+            logger.info("Saving news file", extra={"date": date})
             save_news_file(date, news_data)
         else:
-            print(f"[INFO] Skipping save (dry-run mode)")
+            logger.info("Skipping save (dry-run mode)")
         
         # Step 8: Update index.json (skip if dry_run)
         if not dry_run:
-            print(f"[INFO] Updating index")
+            logger.info("Updating index")
             generate_index()
         else:
-            print(f"[INFO] Skipping index update (dry-run mode)")
+            logger.info("Skipping index update (dry-run mode)")
         
         # Step 9: Mark video as processed (skip if dry_run)
         if not dry_run:
-            print(f"[INFO] Marking video as processed")
+            logger.info("Marking video as processed", extra={"video_id": video_id})
             mark_video_processed(video_id, date)
         else:
-            print(f"[INFO] Skipping cache update (dry-run mode)")
+            logger.info("Skipping cache update (dry-run mode)")
         
-        print(f"[SUCCESS] Processing complete for {time_slot} on {date}")
+        logger.info("Processing complete", extra={"slot": time_slot, "date": date, "video_id": video_id})
         result["success"] = True
         result["video_id"] = video_id
         result["summaries_count"] = len(summaries)
         result["message"] = f"Successfully processed {time_slot} on {date}"
         
     except Exception as e:
-        print(f"[ERROR] Processing failed: {str(e)}")
+        logger.error("Processing failed", extra={"slot": time_slot, "date": date, "error": str(e)}, exc_info=True)
         result["success"] = False
         result["error"] = str(e)
     
