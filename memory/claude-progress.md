@@ -6,8 +6,8 @@ This file bridges context between agent sessions. Each agent reads this at the s
 
 **Project**: ETV Telugu News Aggregator Automation
 **Branch**: 001-etv-news-aggregator-automation
-**Status**: In Progress - Core Pipeline Complete (Features 1-14)
-**Features**: 14/45 complete (31.1%)
+**Status**: In Progress - CLI and Logging Complete (Features 1-16)
+**Features**: 16/45 complete (35.6%)
 **Last Updated**: 2025-12-09
 
 ## What's Been Done
@@ -27,9 +27,58 @@ This is a **template repository** for building long-lived agents. It includes:
 
 ## Session History
 
-### Session 7 - 2025-12-09
+### Session 8 - 2025-12-09 (Part 2)
 
-**Feature**: Backend Foundation - Gemini API, JSON Operations, Cleanup (Features #8-13)
+**Feature**: CLI and Logging Infrastructure (Features #15-16)
+**Branch**: 001-etv-news-aggregator-automation
+**Status**: ✅ Complete
+
+#### Accomplished
+- **Feature #15**: Command-Line Interface with argparse
+  - Added `parse_args()` function to `scripts/process_daily_news.py`
+  - Arguments:
+    - `--slot`: Required, choices ['9pm', '7am']
+    - `--date`: Optional, defaults to today (YYYY-MM-DD format)
+    - `--force`: Flag to bypass cache checking
+    - `--dry-run`: Flag to skip file saving operations
+  - Updated `process_time_slot()`: Added force and dry_run parameters
+  - Updated `main()`: Reads args from parse_args(), no parameters needed
+  - Tests: 10/10 passing (7 argument parsing + 3 integration)
+  - Manual verification: `python -m scripts.process_daily_news --help`
+
+- **Feature #16**: Structured JSON Logging
+  - Created `JSONFormatter` class for structured log output
+  - Fields: timestamp, level, message, module, function, line
+  - Extra fields: video_id, slot, date, error_type, retry_count
+  - Added `setup_logging()` function returning configured logger
+  - Replaced all print() statements with logger calls
+  - logger.info() for steps, logger.error() for exceptions
+  - Tests: 8/8 passing (3 config + 3 JSON format + 2 integration)
+  - Fixed datetime.utcnow() deprecation warning
+
+#### TDD Workflow Verified
+1. ✅ RED Phase: Created 18 tests total, verified FAIL (ImportError, TypeError)
+2. ✅ GREEN Phase: Implemented argparse and JSON logging, 18 tests PASS
+3. ✅ All 24 tests passing (6 orchestrator + 10 CLI + 8 logging)
+4. ✅ Updated feature_list.json for both features
+
+#### Test Summary
+- Total tests: 24 (all passing)
+- Feature #15: 10 CLI tests + 2 updated orchestrator tests
+- Feature #16: 8 logging tests
+- Backward compatibility: All existing tests still pass
+
+#### Next Steps
+Feature #17: Create GitHub Actions workflow for 9 PM news processing
+- Create `.github/workflows/process-9pm-news.yml`
+- Cron trigger: '30 3 * * *' (9:00 AM IST)
+- Use new CLI: `--slot 9pm`
+- Use new logging for GitHub Actions parsing
+- Configure secrets: YOUTUBE_API_KEY, GEMINI_API_KEY
+
+### Session 7 - 2025-12-09 (Part 1)
+
+**Feature**: Backend Foundation - Gemini API, JSON Operations, Cleanup (Features #8-14)
 **Branch**: 001-etv-news-aggregator-automation
 **Status**: ✅ Complete
 
