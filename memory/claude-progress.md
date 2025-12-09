@@ -6,8 +6,8 @@ This file bridges context between agent sessions. Each agent reads this at the s
 
 **Project**: ETV Telugu News Aggregator Automation
 **Branch**: 001-etv-news-aggregator-automation
-**Status**: In Progress - Backend Automation Complete (Features 1-20)
-**Features**: 20/45 complete (44.4%)
+**Status**: In Progress - Frontend Development Started (Features 1-21)
+**Features**: 21/45 complete (46.7%)
 **Last Updated**: 2025-12-09
 
 ## What's Been Done
@@ -26,6 +26,76 @@ This is a **template repository** for building long-lived agents. It includes:
 - ✅ **Issue tracking system** - adhoc bugs, hotfixes, and requests
 
 ## Session History
+
+### Session 8 - 2025-12-09 (Part 4)
+
+**Feature**: HTML Structure with Playwright (Feature #21)
+**Branch**: 001-etv-news-aggregator-automation
+**Status**: ✅ Complete
+
+#### Accomplished
+- **Feature #21**: Create index.html with Semantic Structure
+  - **TDD RED Phase**:
+    - Set up Playwright testing infrastructure from scratch
+    - Created `package.json` with @playwright/test v1.40.0
+    - Created `playwright.config.ts` with multi-browser setup (chromium, firefox, webkit)
+    - Configured web server: Python http.server on localhost:8000
+    - Created `tests/frontend/test_html_structure.spec.ts` with 7 tests
+    - Ran tests: ALL 7 FAILED (as expected - no index.html yet)
+    - Installed Chromium browser: `npx playwright install chromium`
+  
+  - **TDD GREEN Phase**:
+    - Created `index.html` (109 lines) with:
+      - HTML5 doctype with `lang="te"`
+      - Meta charset UTF-8 and viewport
+      - Google Fonts: Noto Sans Telugu (400, 500, 600, 700 weights)
+      - Semantic header: Site title "ETV తెలుగు వార్తలు" + subtitle
+      - Main element with aside (sidebar filters) + article (news content)
+      - Footer with copyright, last updated, info text
+      - Links to css/main.css and js/main.js (for future features)
+    
+    - Created `js/main.js` (28 lines) with:
+      - DOMContentLoaded event handler
+      - Populate current year in footer (#current-year)
+      - Populate last updated timestamp (#last-updated) in Telugu locale
+    
+    - Fixed test file issues:
+      - Corrected Telugu characters (తెలుగు vs టెలుగు)
+      - Fixed Google Fonts selector (only css2 link, not preconnect)
+    
+    - Ran tests: ALL 7 PASSED ✅
+
+#### Tests Created (7 tests)
+1. **Valid HTML5 doctype and structure**: lang="te", charset, viewport
+2. **Site title in Telugu**: Title contains "తెలుగు"
+3. **Semantic header element**: Header visible with Telugu content
+4. **Main element with aside and article**: Sidebar + content structure
+5. **Semantic footer element**: Footer with year timestamp
+6. **Google Fonts for Telugu**: Noto Sans Telugu link present
+7. **Document structure hierarchy**: header → main → footer order
+
+#### Key Decisions
+- **Playwright over Jest**: Better for UI testing with real browser
+- **Python http.server**: Simple local server for testing
+- **Multi-browser support**: chromium, firefox, webkit configured
+- **Telugu locale**: Used 'te-IN' for date formatting in JavaScript
+- **Google Fonts**: 4 weights (400, 500, 600, 700) for typography flexibility
+
+#### Session Summary
+- **Total Features**: 1 feature implemented (21)
+- **Tests Added**: 7 Playwright tests (all passing)
+- **Files Created**: 5 (index.html, js/main.js, package.json, playwright.config.ts, test_html_structure.spec.ts)
+- **Files Modified**: 1 (feature_list.json)
+- **Commits**: 1 commit pushed
+- **Progress**: 21/45 complete (46.7%)
+
+#### Next Steps
+Feature #22-23: Accessibility and Styling
+- Add ARIA labels and accessibility attributes (Feature #22)
+- Create css/main.css with base styles (Feature #23)
+- Telugu font configuration and typography
+- CSS custom properties for theming
+- Responsive design foundation
 
 ### Session 8 - 2025-12-09 (Part 3)
 
