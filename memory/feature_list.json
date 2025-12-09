@@ -226,10 +226,10 @@
       "name": "Implement JSON File Operations",
       "description": "Create functions to load, create, update, and save news JSON files",
       "priority": "high",
-      "passes": false,
+      "passes": true,
       "test_file": "tests/backend/test_json_generator.py",
-      "test_fails_before": false,
-      "test_passes_after": false,
+      "test_fails_before": true,
+      "test_passes_after": true,
       "steps": [
         "Create test file tests/backend/test_json_generator.py",
         "Write tests for JSON operations (expect failure)",
