@@ -18,7 +18,7 @@ import argparse
 import logging
 import json
 from typing import Dict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from scripts.utils.config import get_youtube_api_key, get_gemini_api_key
 from scripts.utils.cache import is_video_processed, mark_video_processed
 from scripts.youtube_fetcher import get_youtube_api_client, search_channel_videos
