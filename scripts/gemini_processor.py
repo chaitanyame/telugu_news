@@ -99,7 +99,7 @@ def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> Li
         
         except ClientError as e:
             # Handle rate limit errors with retry
-            if e.status_code == 429 and attempt < max_retries - 1:
+            if e.code == 429 and attempt < max_retries - 1:
                 wait_time = 30 * (attempt + 1)  # Exponential backoff: 30s, 60s, 90s
                 print(f"Rate limit hit. Retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})")
                 time.sleep(wait_time)

@@ -4,7 +4,7 @@ Main processing script for ETV Telugu News Aggregator.
 This script orchestrates the entire pipeline:
 1. Load configuration and API keys
 2. Check if video already processed
-3. Search YouTube for video
+3. Search YouTube for video (RSS first, then API fallback)
 4. Get Gemini summary if video found
 5. Load or create news file
 6. Update news slot
@@ -14,14 +14,15 @@ This script orchestrates the entire pipeline:
 """
 
 import sys
+import os
 import argparse
 import logging
 import json
-from typing import Dict
+from typing import Dict, Optional
 from datetime import datetime, timezone, timedelta
-from scripts.utils.config import get_youtube_api_key, get_gemini_api_key
+from scripts.utils.config import get_gemini_api_key
 from scripts.utils.cache import is_video_processed, mark_video_processed
-from scripts.youtube_fetcher import get_youtube_api_client, search_channel_videos
+from scripts.rss_fetcher import search_video_rss
 from scripts.gemini_processor import get_gemini_summary
 from scripts.json_generator import (
     load_or_create_news_file,
@@ -142,6 +143,52 @@ def parse_args():
     return parser.parse_args()
 
 
+def search_video(time_slot: str, date: str, logger) -> Optional[Dict]:
+    """
+    Search for video using RSS first, then YouTube API as fallback.
+    
+    Args:
+        time_slot: '9pm' or '7am'
+        date: Date in YYYY-MM-DD format
+        logger: Logger instance
+        
+    Returns:
+        Dict with video_id, title, published_at if found, None otherwise
+    """
+    # Try RSS first (no API key required)
+    logger.info("Trying RSS feed search", extra={"slot": time_slot, "date": date})
+    video_data = search_video_rss(None, time_slot, date)
+    
+    if video_data:
+        logger.info("Found video via RSS", extra={"video_id": video_data["video_id"]})
+        return video_data
+    
+    # Fallback to YouTube API if RSS didn't find it
+    logger.info("RSS search failed, trying YouTube API", extra={"slot": time_slot, "date": date})
+    
+    try:
+        # Only import YouTube API modules if needed
+        from scripts.utils.config import get_youtube_api_key
+        from scripts.youtube_fetcher import get_youtube_api_client, search_channel_videos
+        
+        youtube_api_key = os.environ.get('YOUTUBE_API_KEY', '').strip()
+        if not youtube_api_key:
+            logger.warning("YOUTUBE_API_KEY not set, skipping API fallback")
+            return None
+        
+        youtube_client = get_youtube_api_client(youtube_api_key)
+        video_data = search_channel_videos(youtube_client, None, time_slot, date)
+        
+        if video_data:
+            logger.info("Found video via YouTube API", extra={"video_id": video_data["video_id"]})
+            return video_data
+            
+    except Exception as e:
+        logger.warning(f"YouTube API fallback failed: {e}")
+    
+    return None
+
+
 def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: bool = False) -> Dict:
     """
     Process a single time slot for a specific date.
@@ -166,22 +213,18 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
     }
     
     try:
-        # Step 1: Load API keys
+        # Step 1: Load Gemini API key
         logger.info("Processing time slot", extra={"slot": time_slot, "date": date})
         if dry_run:
             logger.info("Running in DRY-RUN mode", extra={"slot": time_slot})
         if force:
             logger.info("FORCE mode enabled", extra={"slot": time_slot})
         
-        youtube_api_key = get_youtube_api_key()
         gemini_api_key = get_gemini_api_key()
         
-        # Step 2: Check if already processed (we'll check this after finding the video)
+        # Step 2: Search for video (RSS first, then YouTube API fallback)
         logger.info("Searching for video", extra={"slot": time_slot, "date": date})
-        
-        # Step 3: Search YouTube for video (searches all configured channels)
-        youtube_client = get_youtube_api_client(youtube_api_key)
-        video_data = search_channel_videos(youtube_client, None, time_slot, date)
+        video_data = search_video(time_slot, date, logger)
         
         if video_data is None:
             logger.info("Video not found in any channel", extra={"slot": time_slot, "date": date})

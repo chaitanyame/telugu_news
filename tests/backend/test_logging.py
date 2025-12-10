@@ -115,10 +115,8 @@ class TestJSONLogging:
 class TestLoggingIntegration:
     """Test logging integration in process_time_slot"""
     
-    @patch('scripts.process_daily_news.get_youtube_api_key')
     @patch('scripts.process_daily_news.get_gemini_api_key')
-    @patch('scripts.process_daily_news.get_youtube_api_client')
-    @patch('scripts.process_daily_news.search_channel_videos')
+    @patch('scripts.process_daily_news.search_video')
     @patch('scripts.process_daily_news.is_video_processed')
     @patch('scripts.process_daily_news.get_gemini_summary')
     @patch('scripts.process_daily_news.load_or_create_news_file')
@@ -129,14 +127,12 @@ class TestLoggingIntegration:
     @patch('sys.stdout', new_callable=StringIO)
     def test_process_logs_structured_events(
         self, mock_stdout, mock_mark, mock_gen_index, mock_save, mock_update,
-        mock_load, mock_summary, mock_is_processed, mock_search, mock_youtube_client,
-        mock_gemini_key, mock_youtube_key
+        mock_load, mock_summary, mock_is_processed, mock_search,
+        mock_gemini_key
     ):
         """Test that process_time_slot logs structured events"""
         # Setup mocks
-        mock_youtube_key.return_value = "test_yt_key"
         mock_gemini_key.return_value = "test_gemini_key"
-        mock_youtube_client.return_value = MagicMock()
         mock_search.return_value = {
             "video_id": "test123",
             "title": "Test Video",
@@ -164,11 +160,11 @@ class TestLoggingIntegration:
         assert "message" in first_log
         assert "timestamp" in first_log
     
-    @patch('scripts.process_daily_news.get_youtube_api_key')
+    @patch('scripts.process_daily_news.get_gemini_api_key')
     @patch('sys.stdout', new_callable=StringIO)
-    def test_process_logs_error_on_failure(self, mock_stdout, mock_youtube_key):
+    def test_process_logs_error_on_failure(self, mock_stdout, mock_gemini_key):
         """Test that errors are logged with ERROR level"""
-        mock_youtube_key.side_effect = Exception("API key not found")
+        mock_gemini_key.side_effect = Exception("API key not found")
         
         from scripts.process_daily_news import process_time_slot
         

@@ -6,7 +6,9 @@ import pytest
 import os
 from unittest.mock import patch
 from scripts.utils.config import (
-    ETV_CHANNEL_ID,
+    ETV_AP_CHANNEL_ID,
+    ETV_TELUGU_CHANNEL_ID,
+    ALL_CHANNEL_IDS,
     VIDEO_PATTERN_9PM,
     VIDEO_PATTERN_7AM,
     DATA_RETENTION_DAYS,
@@ -18,10 +20,18 @@ from scripts.utils.config import (
 class TestConfigConstants:
     """Test configuration constants"""
     
-    def test_etv_channel_id(self):
-        """Test ETV channel ID constant"""
-        assert ETV_CHANNEL_ID == "UCJi8M0hRKjz8SLPvJKEVTOg"
-        assert isinstance(ETV_CHANNEL_ID, str)
+    def test_etv_channel_ids(self):
+        """Test ETV channel ID constants"""
+        assert ETV_AP_CHANNEL_ID == "UCJi8M0hRKjz8SLPvJKEVTOg"
+        assert ETV_TELUGU_CHANNEL_ID == "UCSs9H1cyB3OHdy8wkit8ZKg"
+        assert isinstance(ETV_AP_CHANNEL_ID, str)
+        assert isinstance(ETV_TELUGU_CHANNEL_ID, str)
+    
+    def test_all_channel_ids(self):
+        """Test ALL_CHANNEL_IDS contains both channels"""
+        assert ETV_TELUGU_CHANNEL_ID in ALL_CHANNEL_IDS
+        assert ETV_AP_CHANNEL_ID in ALL_CHANNEL_IDS
+        assert len(ALL_CHANNEL_IDS) == 2
     
     def test_video_pattern_9pm(self):
         """Test 9 PM video pattern regex"""
