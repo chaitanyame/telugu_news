@@ -11,6 +11,7 @@ import time
 from google import genai
 from google.genai import types
 from google.genai.errors import ClientError
+from requests.exceptions import ConnectionError, Timeout
 from typing import List
 
 
@@ -99,7 +100,6 @@ def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> Li
         except ClientError as e:
             # Handle rate limit errors with retry
             if e.status_code == 429 and attempt < max_retries - 1:
-                # Extract wait time from error message if available
                 wait_time = 30 * (attempt + 1)  # Exponential backoff: 30s, 60s, 90s
                 print(f"Rate limit hit. Retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})")
                 time.sleep(wait_time)
@@ -107,10 +107,21 @@ def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> Li
             else:
                 raise ValueError(f"Gemini API rate limit exceeded: {str(e)}")
         
+        except (ConnectionError, Timeout) as e:
+            # Handle connection errors and timeouts with retry
+            if attempt < max_retries - 1:
+                wait_time = 20 * (attempt + 1)  # Backoff: 20s, 40s, 60s
+                print(f"Connection error. Retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})")
+                time.sleep(wait_time)
+                continue
+            else:
+                raise ValueError(f"Gemini API connection failed after {max_retries} attempts. The video may be too long to process: {str(e)}")
+        
         except Exception as e:
             if isinstance(e, ValueError):
                 raise
+            # Don't retry for other exceptions
             raise ValueError(f"Gemini API error: {str(e)}")
     
     # If all retries exhausted
-    raise ValueError("Gemini API: Maximum retry attempts exceeded due to rate limits")
+    raise ValueError("Gemini API: Maximum retry attempts exceeded")
