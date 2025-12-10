@@ -8,9 +8,48 @@ This file bridges context between agent sessions. Each agent reads this at the s
 **Branch**: dev
 **Status**: ✅ ALL FEATURES COMPLETE - DEPLOYED TO GITHUB PAGES
 **Features**: 45/45 complete (100%)
-**Last Updated**: 2025-01-11
+**Last Updated**: 2025-01-12
 
-## Recent Session - 2025-01-11
+## Recent Session - 2025-01-12
+
+### RSS-Based Video Fetcher Implementation
+
+**Issue**: "Videos not found" errors in GitHub Actions due to:
+1. Videos matched by publish date instead of date in video title
+2. HTML entities in titles (`&quot;`) causing regex failures
+3. YouTube API errors/inconsistencies
+
+**Solution**: Created RSS-based video fetcher as primary method with YouTube API fallback.
+
+**Changes Made**:
+
+1. **scripts/rss_fetcher.py** (NEW):
+   - Uses YouTube RSS feeds: `https://www.youtube.com/feeds/videos.xml?channel_id={ID}`
+   - No API key required - reduces quota usage
+   - `extract_date_from_title()` - extracts date from video title, handles HTML entities
+   - `get_channel_videos_rss()` - fetches recent videos from channel RSS feed
+   - `search_video_rss()` - searches for video matching time slot and date
+   - Limitation: RSS only returns 15 most recent videos
+
+2. **scripts/process_daily_news.py**:
+   - Added `search_video()` helper function
+   - Tries RSS first (no API key needed)
+   - Falls back to YouTube API if RSS doesn't find video
+   - Updated imports to use `search_video_rss` from rss_fetcher
+
+3. **scripts/gemini_processor.py**:
+   - Fixed `e.status_code` to `e.code` for ClientError (correct API)
+
+4. **Test Updates** (104 tests pass):
+   - `test_rss_fetcher.py` (NEW): 12 tests for RSS fetcher
+   - `test_process_daily_news.py`: Updated mocks for `search_video`
+   - `test_gemini_processor.py`: Fixed ClientError instantiation
+   - `test_logging.py`: Updated patches for new import structure
+   - `test_config.py`: Updated channel ID constants
+
+**Commit**: `50561cf` - feat: Add RSS-based video fetcher with YouTube API fallback
+
+### Previous Session - 2025-01-11
 
 ### UI Layout Fix: Single Date Per Page
 
