@@ -31,6 +31,17 @@ from scripts.json_generator import (
 )
 
 
+def get_ist_date() -> str:
+    """
+    Get current date in IST timezone.
+    
+    Returns:
+        str: Date in YYYY-MM-DD format (IST)
+    """
+    ist = timezone(timedelta(hours=5, minutes=30))
+    return datetime.now(ist).strftime('%Y-%m-%d')
+
+
 class JSONFormatter(logging.Formatter):
     """
     Custom JSON formatter for structured logging.
@@ -112,8 +123,8 @@ def parse_args():
     
     parser.add_argument(
         '--date',
-        default=datetime.now().strftime('%Y-%m-%d'),
-        help='Date to process in YYYY-MM-DD format (default: today)'
+        default=get_ist_date(),
+        help='Date to process in YYYY-MM-DD format (default: today in IST)'
     )
     
     parser.add_argument(

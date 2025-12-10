@@ -49,11 +49,14 @@ jobs:
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TZ: Asia/Kolkata
         run: |
           if [ -n "${{ github.event.inputs.date }}" ]; then
             DATE_ARG="--date ${{ github.event.inputs.date }}"
           else
-            DATE_ARG=""
+            # Use current IST date for 9 PM news (same day evening)
+            IST_DATE=$(date -u +"%Y-%m-%d" -d "now +330 minutes")
+            DATE_ARG="--date $IST_DATE"
           fi
           
           if [ "${{ github.event.inputs.force }}" = "true" ]; then
