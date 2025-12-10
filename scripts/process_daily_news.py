@@ -173,10 +173,11 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
         channel_id = CHANNEL_IDS.get(time_slot)
         if not channel_id:
             raise ValueError(f"Unknown time slot: {time_slot}")
+        logger.info("Using channel for search", extra={"slot": time_slot, "channel_id": channel_id})
         video_data = search_channel_videos(youtube_client, channel_id, time_slot, date)
         
         if video_data is None:
-            logger.info("Video not found", extra={"slot": time_slot, "date": date})
+            logger.info("Video not found", extra={"slot": time_slot, "date": date, "channel_id": channel_id})
             result["success"] = True
             result["video_found"] = False
             result["message"] = f"Video not found for {time_slot} on {date}"
