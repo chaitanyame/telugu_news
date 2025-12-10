@@ -52,9 +52,9 @@ def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> Li
     # Retry logic for rate limits
     for attempt in range(max_retries):
         try:
-            # Generate content with video URL using gemini-2.5-flash-latest
+            # Generate content with video URL using gemini-2.5-flash
             response = client.models.generate_content(
-                model='models/gemini-2.5-flash-latest',
+                model='models/gemini-2.5-flash',
                 contents=types.Content(
                     parts=[
                         types.Part(
