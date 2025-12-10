@@ -1,17 +1,18 @@
 """
-Configuration Manager for ETV Telugu News Aggregator
+Configuration Manager for Telugu News Aggregator
 Contains all configuration constants and environment variable loading.
 """
 import os
 import re
 
 
-# ETV Telugu Channel ID
+# Telugu News Channel ID (ETV Telugu)
 ETV_CHANNEL_ID = "UCJi8M0hRKjz8SLPvJKEVTOg"
 
-# Video title patterns for searching
-VIDEO_PATTERN_9PM = r"^9 PM \| ETV Telugu News \|"
-VIDEO_PATTERN_7AM = r"^7 AM \| ETV Telugu News \|"
+# Video title patterns for searching - flexible regex to match various formats
+# Matches patterns like "9 PM | ETV Telugu News | Date" or "9 PM Telugu News"
+VIDEO_PATTERN_9PM = r"9 PM.*Telugu.*News"
+VIDEO_PATTERN_7AM = r"7 AM.*Telugu.*News"
 
 # Data retention period (days)
 DATA_RETENTION_DAYS = 30
