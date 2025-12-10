@@ -35,7 +35,7 @@ def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> Li
     
     # Telugu prompt for news extraction
     prompt = """
-    ఈ వీడియోలో ఉన్న ETV తెలుగు వార్తలను విశ్లేషించండి.
+    ఈ వీడియోలో ఉన్న తెలుగు వార్తలను విశ్లేషించండి.
     
     దయచేసి క్రింది ఫార్మాట్‌లో JSON array రూపంలో 5-8 ముఖ్య వార్తా శీర్షికలను అందించండి:
     

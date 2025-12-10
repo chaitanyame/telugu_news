@@ -209,8 +209,8 @@ const App = (() => {
     card.setAttribute('role', 'article');
 
     const slotBadge = news.slot === '9pm' ? 
-      '<span class="slot-badge slot-9pm">9 PM</span>' :
-      '<span class="slot-badge slot-7am">7 AM</span>';
+      '<span class="slot-badge slot-9pm">సాయంత్రం</span>' :
+      '<span class="slot-badge slot-7am">ఉదయం</span>';
 
     const date = new Date(news.date);
     const formattedDate = date.toLocaleDateString('te-IN', {
@@ -228,18 +228,6 @@ const App = (() => {
       <ul class="news-summary">
         ${(news.summary || []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
       </ul>
-      <div class="news-footer">
-        <a href="https://www.youtube.com/watch?v=${news.video_id}" 
-           target="_blank" 
-           rel="noopener noreferrer"
-           class="youtube-btn"
-           aria-label="YouTube లో వీడియో చూడండి">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M10 16.5l6-4.5-6-4.5v9zM23 12s0-3.85-.46-5.58c-.25-.95-.98-1.69-1.94-1.94C18.88 4 12 4 12 4s-6.88 0-8.6.48c-.96.25-1.69.99-1.94 1.94C1 8.15 1 12 1 12s0 3.85.46 5.58c.25.95.98 1.69 1.94 1.94C5.12 20 12 20 12 20s6.88 0 8.6-.48c.96-.25 1.69-.99 1.94-1.94C23 15.85 23 12 23 12z"/>
-          </svg>
-          YouTube లో చూడండి
-        </a>
-      </div>
     `;
 
     return card;

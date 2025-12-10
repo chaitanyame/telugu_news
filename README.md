@@ -1,6 +1,6 @@
-# ETV Telugu News Aggregator
+# Telugu News Aggregator
 
-**Automated Telugu news aggregation and summarization from ETV Telugu YouTube channel**
+**Automated Telugu news aggregation and summarization**
 
 🔗 **Live Demo**: https://chaitanyame.github.io/telugu_news/ *(Enable GitHub Pages in Settings to deploy)*
 
@@ -11,7 +11,7 @@ Built using the Agent Harness Framework based on [Anthropic's "Effective Harness
 ## Overview
 
 This project automatically:
-- 📺 Fetches ETV Telugu news videos from YouTube (9 PM & 7 AM bulletins)
+- 📺 Fetches Telugu news videos from YouTube (Evening & Morning bulletins)
 - 🤖 Summarizes content using Google Gemini AI
 - 📝 Generates Telugu summaries with key points
 - 🌐 Displays in a responsive web interface
