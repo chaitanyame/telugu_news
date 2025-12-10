@@ -4,7 +4,8 @@
  */
 
 const DataLoader = (() => {
-  const BASE_PATH = '/data';
+  // Get base path - use relative path to work on both local and GitHub Pages
+  const BASE_PATH = './data';
 
   /**
    * Fetch the index file containing all available dates
