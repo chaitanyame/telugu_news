@@ -54,9 +54,9 @@ jobs:
           if [ -n "${{ github.event.inputs.date }}" ]; then
             DATE_ARG="--date ${{ github.event.inputs.date }}"
           else
-            # Use next IST date for 7 AM news (tomorrow morning)
-            # Workflow runs at 11 PM IST, so add 1 day for tomorrow's 7 AM news
-            IST_DATE=$(date -u +"%Y-%m-%d" -d "now +330 minutes +1 day")
+            # Use current IST date for 7 AM news (today's morning video)
+            # Workflow runs at 11 PM IST, processing today's 7 AM video that aired this morning
+            IST_DATE=$(date -u +"%Y-%m-%d" -d "now +330 minutes")
             DATE_ARG="--date $IST_DATE"
           fi
           
