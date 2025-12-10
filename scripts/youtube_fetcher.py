@@ -3,6 +3,7 @@ YouTube Data API v3 Client Wrapper
 Handles YouTube API authentication and video searching.
 """
 import re
+import html
 import logging
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
@@ -13,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 # Pattern to extract date from video title
 # Matches: "8th December", "1st December", "22nd December", "3rd December"
-TITLE_DATE_PATTERN = re.compile(r'(\d{1,2})(?:st|nd|rd|th)\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+"?(\d{4})', re.IGNORECASE)
+# The year may be preceded by a quote or &quot; (HTML entity)
+TITLE_DATE_PATTERN = re.compile(r'(\d{1,2})(?:st|nd|rd|th)\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+["\']?(\d{4})', re.IGNORECASE)
 
 # Month name to number mapping
 MONTH_MAP = {
@@ -29,11 +31,15 @@ def extract_date_from_title(title: str) -> str | None:
     
     Args:
         title: Video title like "9 PM | ETV Telugu News | 8th December "2025"
+               May contain HTML entities like &quot; which will be decoded.
         
     Returns:
         Date string in YYYY-MM-DD format, or None if not found
     """
-    match = TITLE_DATE_PATTERN.search(title)
+    # Decode HTML entities (e.g., &quot; -> ")
+    decoded_title = html.unescape(title)
+    
+    match = TITLE_DATE_PATTERN.search(decoded_title)
     if match:
         day = int(match.group(1))
         month_name = match.group(2).lower()

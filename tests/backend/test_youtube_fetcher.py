@@ -19,6 +19,12 @@ class TestExtractDateFromTitle:
         """Test date extraction when year has quotes"""
         assert extract_date_from_title('9 PM | ETV Telugu News | 8th December "2025') == '2025-12-08'
     
+    def test_extract_date_with_html_entities(self):
+        """Test date extraction when title contains HTML entities like &quot;"""
+        assert extract_date_from_title('9 PM | ETV Telugu News | 9th December &quot;2025') == '2025-12-09'
+        assert extract_date_from_title('7 AM | ETV Telugu News | 10th December &quot;2025') == '2025-12-10'
+        assert extract_date_from_title('9 PM | ETV Telugu News | 1st January &quot;2025') == '2025-01-01'
+    
     def test_extract_date_different_day_suffixes(self):
         """Test date extraction with different day suffixes (st, nd, rd, th)"""
         assert extract_date_from_title('9 PM | ETV Telugu News | 1st January 2025') == '2025-01-01'
