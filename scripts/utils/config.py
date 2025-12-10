@@ -7,16 +7,13 @@ import re
 
 
 # Telugu News Channel IDs
-# ETV Andhra Pradesh uploads 9 PM news
+# ETV Andhra Pradesh
 ETV_AP_CHANNEL_ID = "UCJi8M0hRKjz8SLPvJKEVTOg"
-# ETV Telugu India uploads 7 AM news  
+# ETV Telugu India  
 ETV_TELUGU_CHANNEL_ID = "UCSs9H1cyB3OHdy8wkit8ZKg"
 
-# Mapping of time slots to channel IDs
-CHANNEL_IDS = {
-    "9pm": ETV_AP_CHANNEL_ID,
-    "7am": ETV_TELUGU_CHANNEL_ID
-}
+# Search both channels for both time slots (videos may be on either)
+ALL_CHANNEL_IDS = [ETV_TELUGU_CHANNEL_ID, ETV_AP_CHANNEL_ID]
 
 # Video title patterns for searching
 # Format: "9 PM | ETV Telugu News | 9th December "2025"
