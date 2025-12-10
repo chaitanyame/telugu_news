@@ -21,6 +21,16 @@ const DataLoader = (() => {
       }
       
       const data = await response.json();
+      
+      // Handle new format: array of {date, slots} objects
+      if (Array.isArray(data)) {
+        return {
+          dates: data.map(item => item.date),
+          last_updated: new Date().toISOString()
+        };
+      }
+      
+      // Handle old format: {dates: [], last_updated: ""}
       return data;
     } catch (error) {
       console.error('Error fetching index:', error);
@@ -39,9 +49,13 @@ const DataLoader = (() => {
    */
   async function fetchNewsForDate(date) {
     try {
+      // Convert date to archive path format: YYYY-MM-DD -> archive/YYYY-MM/YYYY-MM-DD.json
+      const [year, month] = date.split('-');
+      const archivePath = `${BASE_PATH}/archive/${year}-${month}/${date}.json`;
+      
       // Add cache busting timestamp
       const timestamp = Date.now();
-      const response = await fetch(`${BASE_PATH}/${date}.json?t=${timestamp}`);
+      const response = await fetch(`${archivePath}?t=${timestamp}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -55,6 +69,30 @@ const DataLoader = (() => {
       }
       
       const data = await response.json();
+      
+      // Convert new format to old format for compatibility
+      // New: {date, slots: {9pm: {...}, 7am: {...}}}
+      // Old: {date, news: [{slot: "9pm", ...}, {slot: "7am", ...}]}
+      if (data.slots) {
+        const newsArray = [];
+        if (data.slots['9pm']) {
+          newsArray.push({
+            slot: '9pm',
+            ...data.slots['9pm']
+          });
+        }
+        if (data.slots['7am']) {
+          newsArray.push({
+            slot: '7am',
+            ...data.slots['7am']
+          });
+        }
+        return {
+          date: data.date,
+          news: newsArray
+        };
+      }
+      
       return data;
     } catch (error) {
       console.error(`Error fetching news for ${date}:`, error);
