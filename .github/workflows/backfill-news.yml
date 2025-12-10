@@ -40,28 +40,42 @@ jobs:
           YESTERDAY=$(date -u +"%Y-%m-%d" -d "now +330 minutes -1 day")
           TWODAYSAGO=$(date -u +"%Y-%m-%d" -d "now +330 minutes -2 days")
           
-          echo "Processing news for: $TWODAYSAGO, $YESTERDAY, $TODAY"
+          # Get current IST hour (0-23)
+          IST_HOUR=$(date -u +"%-H" -d "now +330 minutes")
           
-          # Process 2 days ago
+          echo "Current IST time: $(date -u +"%Y-%m-%d %H:%M" -d "now +330 minutes")"
+          echo "Processing news for dates: $TWODAYSAGO, $YESTERDAY, $TODAY"
+          
+          # Process 2 days ago (both slots - already happened)
           echo "Processing $TWODAYSAGO 9 PM news..."
           python -m scripts.process_daily_news --slot 9pm --date "$TWODAYSAGO" --force || true
           
           echo "Processing $TWODAYSAGO 7 AM news..."
           python -m scripts.process_daily_news --slot 7am --date "$TWODAYSAGO" --force || true
           
-          # Process yesterday
+          # Process yesterday (both slots - already happened)
           echo "Processing $YESTERDAY 9 PM news..."
           python -m scripts.process_daily_news --slot 9pm --date "$YESTERDAY" --force || true
           
           echo "Processing $YESTERDAY 7 AM news..."
           python -m scripts.process_daily_news --slot 7am --date "$YESTERDAY" --force || true
           
-          # Process today
-          echo "Processing $TODAY 9 PM news..."
-          python -m scripts.process_daily_news --slot 9pm --date "$TODAY" --force || true
+          # Process today - only slots that have already aired
+          # 7 AM news airs at 7 AM IST, so process if current hour >= 8
+          if [ "$IST_HOUR" -ge 8 ]; then
+            echo "Processing $TODAY 7 AM news..."
+            python -m scripts.process_daily_news --slot 7am --date "$TODAY" --force || true
+          else
+            echo "Skipping $TODAY 7 AM news - not aired yet (current hour: $IST_HOUR)"
+          fi
           
-          echo "Processing $TODAY 7 AM news..."
-          python -m scripts.process_daily_news --slot 7am --date "$TODAY" --force || true
+          # 9 PM news airs at 9 PM IST (21:00), so process if current hour >= 22
+          if [ "$IST_HOUR" -ge 22 ]; then
+            echo "Processing $TODAY 9 PM news..."
+            python -m scripts.process_daily_news --slot 9pm --date "$TODAY" --force || true
+          else
+            echo "Skipping $TODAY 9 PM news - not aired yet (current hour: $IST_HOUR)"
+          fi
           
           echo "Backfill completed!"
       
