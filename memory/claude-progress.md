@@ -8,9 +8,44 @@ This file bridges context between agent sessions. Each agent reads this at the s
 **Branch**: dev
 **Status**: ✅ ALL FEATURES COMPLETE - DEPLOYED TO GITHUB PAGES
 **Features**: 45/45 complete (100%)
-**Last Updated**: 2025-01-12
+**Last Updated**: 2025-12-10
 
-## Recent Session - 2025-01-12
+## Recent Session - 2025-12-10
+
+### Replaced YouTube API/RSS with Brave Search
+
+**User Request**: Remove YouTube API and RSS approach, use Brave Search instead.
+
+**Changes Made**:
+
+1. **scripts/brave_fetcher.py** (NEW):
+   - Uses Brave Search API to find YouTube videos
+   - No YouTube API key or RSS parsing needed
+   - `search_youtube_via_brave()` - main search function
+   - `extract_date_from_title()` - validates date matches
+   - `extract_video_id_from_url()` - extracts YouTube video ID
+
+2. **scripts/process_daily_news.py**:
+   - Changed import from `rss_fetcher` to `brave_fetcher`
+   - Uses `search_video_with_logging()` that calls Brave Search
+
+3. **scripts/utils/config.py**:
+   - Added `get_brave_api_key()` function
+
+4. **GitHub Actions workflows** (all 3 updated):
+   - Replaced `YOUTUBE_API_KEY` with `BRAVE_API_KEY`
+   - `process-7am-news.yml`, `process-9pm-news.yml`, `backfill-news.yml`
+
+5. **Tests** (128 tests pass):
+   - `test_brave_fetcher.py` (NEW): 19 tests
+   - `test_config.py`: Added 3 Brave API key tests
+   - Updated patches in test_process_daily_news.py, test_logging.py
+
+**Commit**: `c4f0b83` - feat: Replace YouTube API/RSS with Brave Search
+
+**Action Required**: Add `BRAVE_API_KEY` to GitHub Secrets
+
+### Previous Session - 2025-01-12
 
 ### RSS-Based Video Fetcher Implementation
 
