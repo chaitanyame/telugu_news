@@ -251,7 +251,6 @@ const App = (() => {
           <div class="slot-header">
             <span class="slot-badge slot-9pm">సాయంత్రం వార్తలు (9 PM)</span>
           </div>
-          <h4 class="news-title">${escapeHtml(evening.title || 'సాయంత్రం వార్తలు')}</h4>
           <ul class="news-summary">
             ${(evening.summary || []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
           </ul>
@@ -267,7 +266,6 @@ const App = (() => {
           <div class="slot-header">
             <span class="slot-badge slot-7am">ఉదయం వార్తలు (7 AM)</span>
           </div>
-          <h4 class="news-title">${escapeHtml(morning.title || 'ఉదయం వార్తలు')}</h4>
           <ul class="news-summary">
             ${(morning.summary || []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
           </ul>
