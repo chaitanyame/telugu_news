@@ -100,9 +100,10 @@ def _search_single_channel(client, channel_id: str, time_slot: str, date: str):
         items = response.get('items', [])
         logger.info(f"Found {len(items)} videos in channel {channel_id}")
         
-        # Filter by title pattern AND published date
+        # Filter by title pattern AND published date (with flexible date matching)
         compiled_pattern = re.compile(pattern)
         matched_pattern_count = 0
+        target_date_obj = datetime.strptime(date, '%Y-%m-%d').date()
         
         for item in items:
             title = item['snippet']['title']
@@ -115,20 +116,34 @@ def _search_single_channel(client, channel_id: str, time_slot: str, date: str):
             if compiled_pattern.match(title):
                 matched_pattern_count += 1
                 
-                # Compare published date with requested date
-                # For 9 PM news: video published on the same date (evening)
-                # For 7 AM news: video published on the same date (morning)
-                if published_date_str == date:
-                    logger.info(f"✅ MATCHED! Title: {title}, Published: {published_at}, Video ID: {item['id']['videoId']}")
-                    return {
-                        'video_id': item['id']['videoId'],
-                        'title': title,
-                        'published_at': published_at
-                    }
-                else:
-                    logger.info(f"❌ Pattern match but wrong date - Title: {title}, Published: {published_date_str}, Expected: {date}")
+                # Calculate day difference
+                day_diff = (published_date - target_date_obj).days
+                
+                # Accept videos published within reasonable window:
+                # - 7 AM news: can be uploaded night before (-1) or same day (0) or day after (+1)
+                # - 9 PM news: can be uploaded same day (0) or day after (+1)
+                if time_slot == "7am":
+                    # 7 AM news: accept -1, 0, or +1 day
+                    if -1 <= day_diff <= 1:
+                        logger.info(f"✅ MATCHED! Title: {title}, Published: {published_at} ({day_diff:+d} days), Video ID: {item['id']['videoId']}")
+                        return {
+                            'video_id': item['id']['videoId'],
+                            'title': title,
+                            'published_at': published_at
+                        }
+                elif time_slot == "9pm":
+                    # 9 PM news: accept same day (0) or next day (+1)
+                    if 0 <= day_diff <= 1:
+                        logger.info(f"✅ MATCHED! Title: {title}, Published: {published_at} ({day_diff:+d} days), Video ID: {item['id']['videoId']}")
+                        return {
+                            'video_id': item['id']['videoId'],
+                            'title': title,
+                            'published_at': published_at
+                        }
+                
+                logger.info(f"❌ Pattern match but outside date window - Title: {title}, Published: {published_date_str} ({day_diff:+d} days from {date})")
         
-        logger.info(f"Summary for channel {channel_id}: {matched_pattern_count} videos matched pattern, 0 matched date")
+        logger.info(f"Summary for channel {channel_id}: {matched_pattern_count} videos matched pattern, 0 matched date window")
         
         return None
         
