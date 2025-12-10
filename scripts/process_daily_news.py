@@ -4,7 +4,7 @@ Main processing script for ETV Telugu News Aggregator.
 This script orchestrates the entire pipeline:
 1. Load configuration and API keys
 2. Check if video already processed
-3. Search YouTube for video (RSS first, then API fallback)
+3. Search YouTube via Brave Search
 4. Get Gemini summary if video found
 5. Load or create news file
 6. Update news slot
@@ -22,7 +22,7 @@ from typing import Dict, Optional
 from datetime import datetime, timezone, timedelta
 from scripts.utils.config import get_gemini_api_key
 from scripts.utils.cache import is_video_processed, mark_video_processed
-from scripts.rss_fetcher import search_video_rss
+from scripts.brave_fetcher import search_video
 from scripts.gemini_processor import get_gemini_summary
 from scripts.json_generator import (
     load_or_create_news_file,
@@ -143,9 +143,9 @@ def parse_args():
     return parser.parse_args()
 
 
-def search_video(time_slot: str, date: str, logger) -> Optional[Dict]:
+def search_video_with_logging(time_slot: str, date: str, logger) -> Optional[Dict]:
     """
-    Search for video using RSS first, then YouTube API as fallback.
+    Search for video using Brave Search API.
     
     Args:
         time_slot: '9pm' or '7am'
@@ -155,37 +155,14 @@ def search_video(time_slot: str, date: str, logger) -> Optional[Dict]:
     Returns:
         Dict with video_id, title, published_at if found, None otherwise
     """
-    # Try RSS first (no API key required)
-    logger.info("Trying RSS feed search", extra={"slot": time_slot, "date": date})
-    video_data = search_video_rss(None, time_slot, date)
+    logger.info("Searching for video via Brave Search", extra={"slot": time_slot, "date": date})
+    video_data = search_video(time_slot, date)
     
     if video_data:
-        logger.info("Found video via RSS", extra={"video_id": video_data["video_id"]})
+        logger.info("Found video via Brave Search", extra={"video_id": video_data["video_id"]})
         return video_data
     
-    # Fallback to YouTube API if RSS didn't find it
-    logger.info("RSS search failed, trying YouTube API", extra={"slot": time_slot, "date": date})
-    
-    try:
-        # Only import YouTube API modules if needed
-        from scripts.utils.config import get_youtube_api_key
-        from scripts.youtube_fetcher import get_youtube_api_client, search_channel_videos
-        
-        youtube_api_key = os.environ.get('YOUTUBE_API_KEY', '').strip()
-        if not youtube_api_key:
-            logger.warning("YOUTUBE_API_KEY not set, skipping API fallback")
-            return None
-        
-        youtube_client = get_youtube_api_client(youtube_api_key)
-        video_data = search_channel_videos(youtube_client, None, time_slot, date)
-        
-        if video_data:
-            logger.info("Found video via YouTube API", extra={"video_id": video_data["video_id"]})
-            return video_data
-            
-    except Exception as e:
-        logger.warning(f"YouTube API fallback failed: {e}")
-    
+    logger.warning("Video not found via Brave Search", extra={"slot": time_slot, "date": date})
     return None
 
 
@@ -222,12 +199,12 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
         
         gemini_api_key = get_gemini_api_key()
         
-        # Step 2: Search for video (RSS first, then YouTube API fallback)
+        # Step 2: Search for video via Brave Search
         logger.info("Searching for video", extra={"slot": time_slot, "date": date})
-        video_data = search_video(time_slot, date, logger)
+        video_data = search_video_with_logging(time_slot, date, logger)
         
         if video_data is None:
-            logger.info("Video not found in any channel", extra={"slot": time_slot, "date": date})
+            logger.info("Video not found", extra={"slot": time_slot, "date": date})
             result["success"] = True
             result["video_found"] = False
             result["message"] = f"Video not found for {time_slot} on {date}"

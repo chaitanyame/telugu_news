@@ -13,7 +13,7 @@ class TestProcessTimeSlot:
     
     @patch('scripts.process_daily_news.get_gemini_api_key')
     @patch('scripts.process_daily_news.is_video_processed')
-    @patch('scripts.process_daily_news.search_video')
+    @patch('scripts.process_daily_news.search_video_with_logging')
     @patch('scripts.process_daily_news.get_gemini_summary')
     @patch('scripts.process_daily_news.load_or_create_news_file')
     @patch('scripts.process_daily_news.update_news_slot')
@@ -31,11 +31,12 @@ class TestProcessTimeSlot:
         # Mock video not processed
         mock_is_processed.return_value = False
         
-        # Mock video search result (RSS or API)
+        # Mock video search result via Brave Search
         mock_search.return_value = {
             "video_id": "abc12345678",
             "title": "9 PM | ETV Telugu News | 9th December 2025",
-            "published_at": "2025-12-09T21:00:00Z"
+            "published_at": "2025-12-09T21:00:00Z",
+            "source": "brave_search"
         }
         
         # Mock Gemini summary
@@ -79,7 +80,7 @@ class TestProcessTimeSlot:
         mock_mark.assert_called_once()
     
     @patch('scripts.process_daily_news.get_gemini_api_key')
-    @patch('scripts.process_daily_news.search_video')
+    @patch('scripts.process_daily_news.search_video_with_logging')
     @patch('scripts.process_daily_news.is_video_processed')
     def test_video_already_processed(
         self, mock_is_processed, mock_search, mock_gemini_key
@@ -87,11 +88,12 @@ class TestProcessTimeSlot:
         """Test skipping already processed video"""
         mock_gemini_key.return_value = "test_key"
         
-        # Mock video found
+        # Mock video found via Brave Search
         mock_search.return_value = {
             "video_id": "abc12345678",
             "title": "9 PM | ETV Telugu News | 9th December 2025",
-            "published_at": "2025-12-09T21:00:00Z"
+            "published_at": "2025-12-09T21:00:00Z",
+            "source": "brave_search"
         }
         
         # Video already processed
@@ -104,7 +106,7 @@ class TestProcessTimeSlot:
         assert "already processed" in result["message"]
     
     @patch('scripts.process_daily_news.get_gemini_api_key')
-    @patch('scripts.process_daily_news.search_video')
+    @patch('scripts.process_daily_news.search_video_with_logging')
     def test_video_not_found(self, mock_search, mock_gemini_key):
         """Test handling when video not found"""
         mock_gemini_key.return_value = "test_key"

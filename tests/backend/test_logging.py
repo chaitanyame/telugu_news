@@ -116,7 +116,7 @@ class TestLoggingIntegration:
     """Test logging integration in process_time_slot"""
     
     @patch('scripts.process_daily_news.get_gemini_api_key')
-    @patch('scripts.process_daily_news.search_video')
+    @patch('scripts.process_daily_news.search_video_with_logging')
     @patch('scripts.process_daily_news.is_video_processed')
     @patch('scripts.process_daily_news.get_gemini_summary')
     @patch('scripts.process_daily_news.load_or_create_news_file')
@@ -136,7 +136,8 @@ class TestLoggingIntegration:
         mock_search.return_value = {
             "video_id": "test123",
             "title": "Test Video",
-            "published_at": "2025-12-09T21:00:00Z"
+            "published_at": "2025-12-09T21:00:00Z",
+            "source": "brave_search"
         }
         mock_is_processed.return_value = False
         mock_summary.return_value = ["Summary 1", "Summary 2", "Summary 3", "Summary 4", "Summary 5"]
