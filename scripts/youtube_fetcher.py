@@ -11,6 +11,38 @@ from scripts.utils.config import VIDEO_PATTERN_9PM, VIDEO_PATTERN_7AM, ALL_CHANN
 
 logger = logging.getLogger(__name__)
 
+# Pattern to extract date from video title
+# Matches: "8th December", "1st December", "22nd December", "3rd December"
+TITLE_DATE_PATTERN = re.compile(r'(\d{1,2})(?:st|nd|rd|th)\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+"?(\d{4})', re.IGNORECASE)
+
+# Month name to number mapping
+MONTH_MAP = {
+    'january': 1, 'february': 2, 'march': 3, 'april': 4,
+    'may': 5, 'june': 6, 'july': 7, 'august': 8,
+    'september': 9, 'october': 10, 'november': 11, 'december': 12
+}
+
+
+def extract_date_from_title(title: str) -> str | None:
+    """
+    Extract the news date from video title.
+    
+    Args:
+        title: Video title like "9 PM | ETV Telugu News | 8th December "2025"
+        
+    Returns:
+        Date string in YYYY-MM-DD format, or None if not found
+    """
+    match = TITLE_DATE_PATTERN.search(title)
+    if match:
+        day = int(match.group(1))
+        month_name = match.group(2).lower()
+        year = int(match.group(3))
+        month = MONTH_MAP.get(month_name)
+        if month:
+            return f"{year:04d}-{month:02d}-{day:02d}"
+    return None
+
 
 def get_youtube_api_client(api_key: str):
     """
@@ -63,6 +95,7 @@ def search_channel_videos(client, channel_id: str, time_slot: str, date: str):
 def _search_single_channel(client, channel_id: str, time_slot: str, date: str):
     """
     Search a single channel for video by time slot and date.
+    Matches video by parsing the date from the video title, not the published date.
     """
     try:
         # Get the appropriate title pattern
@@ -73,10 +106,11 @@ def _search_single_channel(client, channel_id: str, time_slot: str, date: str):
         else:
             raise ValueError(f"Invalid time slot: {time_slot}")
         
-        # Parse date and create search window (2 days before to 1 day after)
+        # Parse date and create search window (3 days before to 2 days after)
+        # Videos may be uploaded days after the actual news date
         target_date = datetime.strptime(date, '%Y-%m-%d')
-        published_after = target_date - timedelta(days=2)
-        published_before = target_date + timedelta(days=1)
+        published_after = target_date - timedelta(days=3)
+        published_before = target_date + timedelta(days=2)
         
         # Format for API (RFC 3339)
         published_after_str = published_after.strftime('%Y-%m-%dT00:00:00Z')
@@ -100,50 +134,38 @@ def _search_single_channel(client, channel_id: str, time_slot: str, date: str):
         items = response.get('items', [])
         logger.info(f"Found {len(items)} videos in channel {channel_id}")
         
-        # Filter by title pattern AND published date (with flexible date matching)
+        # Filter by title pattern AND extract date from title
         compiled_pattern = re.compile(pattern)
         matched_pattern_count = 0
-        target_date_obj = datetime.strptime(date, '%Y-%m-%d').date()
         
         for item in items:
             title = item['snippet']['title']
             published_at = item['snippet']['publishedAt']
-            
-            # Parse published date (format: 2025-12-09T16:28:16Z)
-            published_date = datetime.strptime(published_at, '%Y-%m-%dT%H:%M:%SZ').date()
-            published_date_str = published_date.strftime('%Y-%m-%d')
+            video_id = item['id']['videoId']
             
             if compiled_pattern.match(title):
                 matched_pattern_count += 1
                 
-                # Calculate day difference
-                day_diff = (published_date - target_date_obj).days
+                # Extract the actual news date from the video title
+                title_date = extract_date_from_title(title)
                 
-                # Accept videos published within reasonable window:
-                # - 7 AM news: can be uploaded night before (-1) or same day (0) or day after (+1)
-                # - 9 PM news: can be uploaded same day (0) or day after (+1)
-                if time_slot == "7am":
-                    # 7 AM news: accept -1, 0, or +1 day
-                    if -1 <= day_diff <= 1:
-                        logger.info(f"✅ MATCHED! Title: {title}, Published: {published_at} ({day_diff:+d} days), Video ID: {item['id']['videoId']}")
+                if title_date:
+                    logger.info(f"Video '{title}' - Title date: {title_date}, Looking for: {date}")
+                    
+                    # Check if the date in title matches the target date
+                    if title_date == date:
+                        logger.info(f"✅ MATCHED! Title: {title}, Title Date: {title_date}, Published: {published_at}, Video ID: {video_id}")
                         return {
-                            'video_id': item['id']['videoId'],
+                            'video_id': video_id,
                             'title': title,
                             'published_at': published_at
                         }
-                elif time_slot == "9pm":
-                    # 9 PM news: accept same day (0) or next day (+1)
-                    if 0 <= day_diff <= 1:
-                        logger.info(f"✅ MATCHED! Title: {title}, Published: {published_at} ({day_diff:+d} days), Video ID: {item['id']['videoId']}")
-                        return {
-                            'video_id': item['id']['videoId'],
-                            'title': title,
-                            'published_at': published_at
-                        }
-                
-                logger.info(f"❌ Pattern match but outside date window - Title: {title}, Published: {published_date_str} ({day_diff:+d} days from {date})")
+                    else:
+                        logger.info(f"❌ Date mismatch - Title has {title_date}, looking for {date}")
+                else:
+                    logger.warning(f"Could not extract date from title: {title}")
         
-        logger.info(f"Summary for channel {channel_id}: {matched_pattern_count} videos matched pattern, 0 matched date window")
+        logger.info(f"Summary for channel {channel_id}: {matched_pattern_count} videos matched pattern, 0 matched target date {date}")
         
         return None
         
