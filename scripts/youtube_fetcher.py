@@ -6,7 +6,7 @@ import re
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from scripts.utils.config import VIDEO_PATTERN_9PM, VIDEO_PATTERN_7AM
+from scripts.utils.config import VIDEO_PATTERN_9PM, VIDEO_PATTERN_7AM, CHANNEL_IDS
 
 
 def get_youtube_api_client(api_key: str):

@@ -19,7 +19,7 @@ import logging
 import json
 from typing import Dict
 from datetime import datetime, timezone
-from scripts.utils.config import get_youtube_api_key, get_gemini_api_key, ETV_CHANNEL_ID
+from scripts.utils.config import get_youtube_api_key, get_gemini_api_key, CHANNEL_IDS
 from scripts.utils.cache import is_video_processed, mark_video_processed
 from scripts.youtube_fetcher import get_youtube_api_client, search_channel_videos
 from scripts.gemini_processor import get_gemini_summary
@@ -170,7 +170,10 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
         
         # Step 3: Search YouTube for video
         youtube_client = get_youtube_api_client(youtube_api_key)
-        video_data = search_channel_videos(youtube_client, ETV_CHANNEL_ID, time_slot, date)
+        channel_id = CHANNEL_IDS.get(time_slot)
+        if not channel_id:
+            raise ValueError(f"Unknown time slot: {time_slot}")
+        video_data = search_channel_videos(youtube_client, channel_id, time_slot, date)
         
         if video_data is None:
             logger.info("Video not found", extra={"slot": time_slot, "date": date})
