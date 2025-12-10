@@ -193,9 +193,8 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
         
         # Step 4: Get Gemini summary
         logger.info("Generating summary with Gemini", extra={"video_id": video_id})
-        video_title = video_data.get("title", "")
-        video_description = video_data.get("description", "")
-        summaries = get_gemini_summary(video_title, video_description, gemini_api_key)
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
+        summaries = get_gemini_summary(video_url, gemini_api_key)
         logger.info("Generated summaries", extra={"video_id": video_id, "count": len(summaries)})
         
         # Step 5: Load or create news file
