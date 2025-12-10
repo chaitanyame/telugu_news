@@ -133,30 +133,35 @@ def _search_single_channel(client, channel_id: str, time_slot: str, date: str):
         items = response.get('items', [])
         logger.info(f"Found {len(items)} videos in channel {channel_id}")
         
+        # Log all video titles for debugging
+        if items:
+            all_titles = [item['snippet']['title'] for item in items]
+            logger.info(f"All {len(all_titles)} titles from channel {channel_id}: {all_titles}")
+        
         # Get expected date string to match in title (e.g., "10th December")
         expected_date_str = get_expected_date_string(date)
         logger.info(f"Looking for videos with date: {expected_date_str}")
         
         # Filter by title pattern AND date
         compiled_pattern = re.compile(pattern)
+        matched_pattern_count = 0
         for item in items:
             title = item['snippet']['title']
             if compiled_pattern.match(title):
+                matched_pattern_count += 1
                 # Check if the date in the title matches the requested date
                 # Title format: "7 AM | ETV Telugu News | 10th December "2025"
                 if expected_date_str in title:
-                    logger.info(f"Matched video: {title} on channel {channel_id}")
+                    logger.info(f"✅ MATCHED! Title: {title}, Video ID: {item['id']['videoId']}")
                     return {
                         'video_id': item['id']['videoId'],
                         'title': title,
                         'published_at': item['snippet']['publishedAt']
                     }
                 else:
-                    logger.info(f"Pattern match but wrong date - Title: {title}, Expected: {expected_date_str}")
+                    logger.info(f"❌ Pattern match but wrong date - Title: {title}, Expected: {expected_date_str}")
         
-        # Log titles for debugging if no match
-        if items:
-            logger.info(f"No pattern match on {channel_id}. First 5 titles: {[item['snippet']['title'] for item in items[:5]]}")
+        logger.info(f"Summary: {matched_pattern_count} videos matched pattern, 0 matched date filter")
         
         return None
         
