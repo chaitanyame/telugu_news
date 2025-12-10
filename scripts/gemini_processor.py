@@ -3,7 +3,7 @@ Gemini API processor for video summarization.
 
 This module provides functions to:
 1. Create authenticated Gemini API client
-2. Process YouTube videos using Gemini to generate Telugu news summaries
+2. Process YouTube video descriptions using Gemini to generate Telugu news summaries
 """
 
 import json
@@ -32,12 +32,13 @@ def create_gemini_client(api_key: str):
         raise ValueError(f"Failed to authenticate with Gemini API: {str(e)}")
 
 
-def get_gemini_summary(video_url: str, api_key: str) -> List[str]:
+def get_gemini_summary(video_title: str, video_description: str, api_key: str) -> List[str]:
     """
-    Process YouTube video and generate Telugu news summaries using Gemini API.
+    Generate Telugu news summaries using Gemini API based on video title and description.
     
     Args:
-        video_url (str): YouTube video URL
+        video_title (str): YouTube video title
+        video_description (str): YouTube video description
         api_key (str): Google Gemini API key
     
     Returns:
@@ -50,22 +51,27 @@ def get_gemini_summary(video_url: str, api_key: str) -> List[str]:
         model = create_gemini_client(api_key)
         
         # Telugu prompt for news extraction
-        prompt = """
-        ఈ వీడియోలో ఉన్న ETV తెలుగు వార్తలను విశ్లేషించండి.
+        prompt = f"""
+        ఈ ETV తెలుగు వార్తల వీడియో గురించి సమాచారం:
         
-        దయచేసి క్రింది ఫార్మాట్‌లో JSON array రూపంలో 5-8 ముఖ్య వార్తా శీర్షికలను అందించండి:
+        శీర్షిక: {video_title}
+        వివరణ: {video_description}
+        
+        దయచేసి ఈ వార్తల వీడియో నుండి 5-8 ముఖ్య వార్తా శీర్షికలను JSON array రూపంలో అందించండి:
         
         ["వార్త శీర్షిక 1", "వార్త శీర్షిక 2", "వార్త శీర్షిక 3", ...]
         
         ప్రతి వార్త శీర్షిక:
         - తెలుగులో ఉండాలి
-        - స్పష్టంగా మరియు సంక్షిప్తంగా ఉండాలి
+        - స్పష్టంగా మరియు సంక్షిప్తంగా ఉండాలి (10-15 పదాలు)
         - ముఖ్యమైన వార్తలకు ప్రాధాన్యత ఇవ్వండి
         - JSON array format మాత్రమే తిరిగి పంపండి, ఇతర వచనం వద్దు
+        
+        ఉదాహరణ: ["తెలంగాణలో భారీ వర్షాలు", "కేంద్ర మంత్రి హైదరాబాద్ పర్యటన", "రైతులకు ప్రభుత్వం సహాయం"]
         """
         
-        # Generate content with video URL
-        response = model.generate_content([prompt, {"file_data": {"uri": video_url}}])
+        # Generate content with text prompt only
+        response = model.generate_content(prompt)
         
         if not response or not response.text:
             raise ValueError("Gemini API returned empty response")

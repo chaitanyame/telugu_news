@@ -81,9 +81,23 @@ def search_channel_videos(client, channel_id: str, time_slot: str, date: str):
         for item in response.get('items', []):
             title = item['snippet']['title']
             if compiled_pattern.match(title):
+                video_id = item['id']['videoId']
+                
+                # Get full video details including description
+                video_request = client.videos().list(
+                    part='snippet',
+                    id=video_id
+                )
+                video_response = video_request.execute()
+                
+                description = ""
+                if video_response.get('items'):
+                    description = video_response['items'][0]['snippet'].get('description', '')
+                
                 return {
-                    'video_id': item['id']['videoId'],
+                    'video_id': video_id,
                     'title': title,
+                    'description': description,
                     'published_at': item['snippet']['publishedAt']
                 }
         
