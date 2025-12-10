@@ -1,0 +1,84 @@
+name: Backfill Last 2 Days News
+
+on:
+  workflow_dispatch:
+    # Allow manual triggering from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  backfill-news:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+      
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'scripts/requirements.txt'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
+      
+      - name: Backfill last 2 days news
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TZ: Asia/Kolkata
+        run: |
+          # Calculate dates for last 2 days in IST
+          TODAY=$(date -u +"%Y-%m-%d" -d "now +330 minutes")
+          YESTERDAY=$(date -u +"%Y-%m-%d" -d "now +330 minutes -1 day")
+          TWODAYSAGO=$(date -u +"%Y-%m-%d" -d "now +330 minutes -2 days")
+          
+          echo "Processing news for: $TWODAYSAGO, $YESTERDAY, $TODAY"
+          
+          # Process 2 days ago
+          echo "Processing $TWODAYSAGO 9 PM news..."
+          python -m scripts.process_daily_news --slot 9pm --date "$TWODAYSAGO" --force || true
+          
+          echo "Processing $TWODAYSAGO 7 AM news..."
+          python -m scripts.process_daily_news --slot 7am --date "$TWODAYSAGO" --force || true
+          
+          # Process yesterday
+          echo "Processing $YESTERDAY 9 PM news..."
+          python -m scripts.process_daily_news --slot 9pm --date "$YESTERDAY" --force || true
+          
+          echo "Processing $YESTERDAY 7 AM news..."
+          python -m scripts.process_daily_news --slot 7am --date "$YESTERDAY" --force || true
+          
+          # Process today
+          echo "Processing $TODAY 9 PM news..."
+          python -m scripts.process_daily_news --slot 9pm --date "$TODAY" --force || true
+          
+          echo "Processing $TODAY 7 AM news..."
+          python -m scripts.process_daily_news --slot 7am --date "$TODAY" --force || true
+          
+          echo "Backfill completed!"
+      
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --quiet data/ || echo "changed=true" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push changes
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/
+          git commit -m "chore: Backfill last 2 days news data"
+          git push origin dev
+      
+      - name: No changes detected
+        if: steps.git-check.outputs.changed != 'true'
+        run: echo "No new news data to commit"
