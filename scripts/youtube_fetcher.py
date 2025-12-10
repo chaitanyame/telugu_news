@@ -3,10 +3,13 @@ YouTube Data API v3 Client Wrapper
 Handles YouTube API authentication and video searching.
 """
 import re
+import logging
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from scripts.utils.config import VIDEO_PATTERN_9PM, VIDEO_PATTERN_7AM, CHANNEL_IDS
+
+logger = logging.getLogger(__name__)
 
 
 def get_youtube_api_client(api_key: str):
@@ -63,6 +66,8 @@ def search_channel_videos(client, channel_id: str, time_slot: str, date: str):
         published_after_str = published_after.strftime('%Y-%m-%dT00:00:00Z')
         published_before_str = published_before.strftime('%Y-%m-%dT23:59:59Z')
         
+        logger.info(f"Searching channel {channel_id} for {time_slot} videos between {published_after_str} and {published_before_str}")
+        
         # Search request
         request = client.search().list(
             part='snippet',
@@ -76,16 +81,25 @@ def search_channel_videos(client, channel_id: str, time_slot: str, date: str):
         
         response = request.execute()
         
+        items = response.get('items', [])
+        logger.info(f"Found {len(items)} videos in search results")
+        
         # Filter by title pattern
         compiled_pattern = re.compile(pattern)
-        for item in response.get('items', []):
+        for item in items:
             title = item['snippet']['title']
+            logger.debug(f"Checking video: {title}")
             if compiled_pattern.match(title):
+                logger.info(f"Matched video: {title}")
                 return {
                     'video_id': item['id']['videoId'],
                     'title': title,
                     'published_at': item['snippet']['publishedAt']
                 }
+        
+        # Log titles for debugging if no match
+        if items:
+            logger.info(f"No pattern match. First 5 video titles: {[item['snippet']['title'] for item in items[:5]]}")
         
         # No matching video found
         return None
