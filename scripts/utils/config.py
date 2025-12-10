@@ -9,10 +9,11 @@ import re
 # Telugu News Channel ID (ETV Telugu)
 ETV_CHANNEL_ID = "UCJi8M0hRKjz8SLPvJKEVTOg"
 
-# Video title patterns for searching - must match exact YouTube video titles
+# Video title patterns for searching - flexible patterns to match various formats
 # Backend uses these to find videos, frontend displays generic names
-VIDEO_PATTERN_9PM = r"^9 PM.*ETV Telugu News"
-VIDEO_PATTERN_7AM = r"^7 AM.*ETV Telugu News"
+# Case-insensitive matching is done in youtube_fetcher.py
+VIDEO_PATTERN_9PM = r"9\s*PM.*Telugu.*News"
+VIDEO_PATTERN_7AM = r"7\s*AM.*Telugu.*News"
 
 # Data retention period (days)
 DATA_RETENTION_DAYS = 30
