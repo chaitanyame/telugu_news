@@ -383,6 +383,83 @@ footer {
     color: #d32f2f;
 }
 
+/* Date card layout - combined slots per date */
+.date-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.date-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.date-header .news-date {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.slots-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.slot-section {
+    padding: 1.5rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.evening-section {
+    border-left: 4px solid #1976D2;
+}
+
+.morning-section {
+    border-left: 4px solid #388E3C;
+}
+
+.slot-header {
+    margin-bottom: 1rem;
+}
+
+.slot-section .news-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+
+.slot-section .news-summary {
+    margin-bottom: 0;
+}
+
+.slot-section .news-summary li {
+    font-size: 0.95rem;
+}
+
+.no-slots {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+}
+
+/* Responsive adjustments for date cards */
+@media (min-width: 768px) {
+    .slots-container {
+        flex-direction: row;
+        gap: 2rem;
+    }
+    
+    .slot-section {
+        flex: 1;
+    }
+}
+
 /* Focus styles for accessibility */
 a:focus,
 button:focus,

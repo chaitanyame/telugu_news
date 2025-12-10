@@ -1,15 +1,17 @@
 /**
  * Telugu News Aggregator - Main Application
  * Handles news loading, filtering, and display
+ * Single date per page with combined 9 PM and 7 AM slots
  */
 
 const App = (() => {
   // State management
   let state = {
-    allNews: [],
-    filteredNews: [],
+    allNews: [],           // All news items
+    newsByDate: {},        // News grouped by date: { 'YYYY-MM-DD': { date, slots: { '9pm': news, '7am': news } } }
+    filteredDates: [],     // Filtered date keys to display
     currentPage: 1,
-    itemsPerPage: 10,
+    itemsPerPage: 1,       // 1 date per page (single date with both slots)
     filters: {
       slots: ['9pm', '7am'],
       dateFrom: null,
@@ -100,12 +102,25 @@ const App = (() => {
         }))
       );
 
-      // Sort by date (newest first)
-      state.allNews.sort((a, b) => {
-        const dateA = new Date(a.published_at || a.date);
-        const dateB = new Date(b.published_at || b.date);
-        return dateB - dateA;
+      // Group news by date with slots
+      state.newsByDate = {};
+      state.allNews.forEach(news => {
+        const dateKey = news.date;
+        if (!state.newsByDate[dateKey]) {
+          state.newsByDate[dateKey] = {
+            date: dateKey,
+            slots: {}
+          };
+        }
+        // Store news in appropriate slot (avoid duplicates by video_id)
+        if (!state.newsByDate[dateKey].slots[news.slot] || 
+            state.newsByDate[dateKey].slots[news.slot].video_id === news.video_id) {
+          state.newsByDate[dateKey].slots[news.slot] = news;
+        }
       });
+
+      // Get sorted date keys (newest first)
+      state.filteredDates = Object.keys(state.newsByDate).sort((a, b) => b.localeCompare(a));
 
       // Apply initial filters
       applyFilters();
@@ -131,22 +146,22 @@ const App = (() => {
     const dateFrom = elements.dateFrom?.value;
     const dateTo = elements.dateTo?.value;
 
-    // Filter news
-    state.filteredNews = state.allNews.filter(news => {
-      // Filter by slot
-      if (selectedSlots.length > 0 && !selectedSlots.includes(news.slot)) {
-        return false;
-      }
+    // Filter dates based on criteria
+    state.filteredDates = Object.keys(state.newsByDate).filter(dateKey => {
+      const dateData = state.newsByDate[dateKey];
+      
+      // Check if date has at least one matching slot
+      const hasMatchingSlot = selectedSlots.length === 0 || 
+        selectedSlots.some(slot => dateData.slots[slot]);
+      
+      if (!hasMatchingSlot) return false;
 
       // Filter by date range
-      if (dateFrom || dateTo) {
-        const newsDate = news.date;
-        if (dateFrom && newsDate < dateFrom) return false;
-        if (dateTo && newsDate > dateTo) return false;
-      }
+      if (dateFrom && dateKey < dateFrom) return false;
+      if (dateTo && dateKey > dateTo) return false;
 
       return true;
-    });
+    }).sort((a, b) => b.localeCompare(a)); // Sort newest first
 
     // Reset to first page
     state.currentPage = 1;
@@ -161,9 +176,17 @@ const App = (() => {
    * Render statistics
    */
   function renderStats() {
-    const total9pm = state.filteredNews.filter(n => n.slot === '9pm').length;
-    const total7am = state.filteredNews.filter(n => n.slot === '7am').length;
-    const total = state.filteredNews.length;
+    // Count total slots across all filtered dates
+    let total9pm = 0;
+    let total7am = 0;
+    
+    state.filteredDates.forEach(dateKey => {
+      const dateData = state.newsByDate[dateKey];
+      if (dateData.slots['9pm']) total9pm++;
+      if (dateData.slots['7am']) total7am++;
+    });
+
+    const total = total9pm + total7am;
 
     if (elements.totalNews) elements.totalNews.textContent = total;
     if (elements.total9pm) elements.total9pm.textContent = total9pm;
@@ -171,20 +194,20 @@ const App = (() => {
   }
 
   /**
-   * Render news list
+   * Render news list - one date per page with both slots
    */
   function renderNews() {
     if (!elements.newsList) return;
 
-    // Calculate pagination
+    // Calculate pagination (by date, not by individual news items)
     const startIdx = (state.currentPage - 1) * state.itemsPerPage;
     const endIdx = startIdx + state.itemsPerPage;
-    const newsToShow = state.filteredNews.slice(startIdx, endIdx);
+    const datesToShow = state.filteredDates.slice(startIdx, endIdx);
 
     // Clear existing content
     elements.newsList.innerHTML = '';
 
-    if (newsToShow.length === 0) {
+    if (datesToShow.length === 0) {
       elements.newsList.innerHTML = `
         <div class="no-news" role="status">
           <p>ఎటువంటి వార్తలు అందుబాటులో లేవు</p>
@@ -193,51 +216,87 @@ const App = (() => {
       return;
     }
 
-    // Render each news item
-    newsToShow.forEach(news => {
-      const newsCard = createNewsCard(news);
-      elements.newsList.appendChild(newsCard);
+    // Render each date's news (combined card for all slots)
+    datesToShow.forEach(dateKey => {
+      const dateData = state.newsByDate[dateKey];
+      const dateCard = createDateCard(dateData);
+      elements.newsList.appendChild(dateCard);
     });
   }
 
   /**
-   * Create a news card element
+   * Create a date card element with both 9 PM and 7 AM slots
    */
-  function createNewsCard(news) {
+  function createDateCard(dateData) {
     const card = document.createElement('article');
-    card.className = 'news-card';
+    card.className = 'news-card date-card';
     card.setAttribute('role', 'article');
 
-    const slotBadge = news.slot === '9pm' ? 
-      '<span class="slot-badge slot-9pm">సాయంత్రం</span>' :
-      '<span class="slot-badge slot-7am">ఉదయం</span>';
-
-    const date = new Date(news.date);
+    const date = new Date(dateData.date);
     const formattedDate = date.toLocaleDateString('te-IN', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      weekday: 'long'
     });
 
+    // Build slot sections
+    let slotsHtml = '';
+    
+    // Evening news (9 PM) section
+    if (dateData.slots['9pm']) {
+      const evening = dateData.slots['9pm'];
+      slotsHtml += `
+        <div class="slot-section evening-section">
+          <div class="slot-header">
+            <span class="slot-badge slot-9pm">సాయంత్రం వార్తలు (9 PM)</span>
+          </div>
+          <h4 class="news-title">${escapeHtml(evening.title || 'సాయంత్రం వార్తలు')}</h4>
+          <ul class="news-summary">
+            ${(evening.summary || []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    // Morning news (7 AM) section
+    if (dateData.slots['7am']) {
+      const morning = dateData.slots['7am'];
+      slotsHtml += `
+        <div class="slot-section morning-section">
+          <div class="slot-header">
+            <span class="slot-badge slot-7am">ఉదయం వార్తలు (7 AM)</span>
+          </div>
+          <h4 class="news-title">${escapeHtml(morning.title || 'ఉదయం వార్తలు')}</h4>
+          <ul class="news-summary">
+            ${(morning.summary || []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    // If no slots available
+    if (!slotsHtml) {
+      slotsHtml = '<p class="no-slots">ఈ తేదీకి వార్తలు అందుబాటులో లేవు</p>';
+    }
+
     card.innerHTML = `
-      <div class="news-header">
-        ${slotBadge}
-        <time datetime="${news.date}" class="news-date">${formattedDate}</time>
+      <div class="date-header">
+        <time datetime="${dateData.date}" class="news-date">${formattedDate}</time>
       </div>
-      <h3 class="news-title">${escapeHtml(news.title)}</h3>
-      <ul class="news-summary">
-        ${(news.summary || []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
-      </ul>
+      <div class="slots-container">
+        ${slotsHtml}
+      </div>
     `;
 
     return card;
   }
 
   /**
-   * Change page (pagination)
+   * Change page (pagination by date)
    */
   function changePage(direction) {
-    const totalPages = Math.ceil(state.filteredNews.length / state.itemsPerPage);
+    const totalPages = Math.ceil(state.filteredDates.length / state.itemsPerPage);
     const newPage = state.currentPage + direction;
 
     if (newPage < 1 || newPage > totalPages) return;
@@ -254,7 +313,7 @@ const App = (() => {
    * Update pagination controls
    */
   function updatePaginationControls() {
-    const totalPages = Math.ceil(state.filteredNews.length / state.itemsPerPage);
+    const totalPages = Math.ceil(state.filteredDates.length / state.itemsPerPage);
 
     // Update page info
     if (elements.pageInfo) {
