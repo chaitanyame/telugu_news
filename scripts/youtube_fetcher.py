@@ -76,11 +76,11 @@ def search_channel_videos(client, channel_id: str, time_slot: str, date: str):
         
         response = request.execute()
         
-        # Filter by title pattern (case-insensitive)
-        compiled_pattern = re.compile(pattern, re.IGNORECASE)
+        # Filter by title pattern
+        compiled_pattern = re.compile(pattern)
         for item in response.get('items', []):
             title = item['snippet']['title']
-            if compiled_pattern.search(title):
+            if compiled_pattern.match(title):
                 return {
                     'video_id': item['id']['videoId'],
                     'title': title,
