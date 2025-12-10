@@ -4,11 +4,43 @@ This file bridges context between agent sessions. Each agent reads this at the s
 
 ## Current Status
 
-**Project**: ETV Telugu News Aggregator Automation
-**Branch**: 001-etv-news-aggregator-automation
-**Status**: ✅ ALL FEATURES COMPLETE - READY FOR DEPLOYMENT
+**Project**: Telugu News Aggregator (Generic Branding)
+**Branch**: dev
+**Status**: ✅ ALL FEATURES COMPLETE - DEPLOYED TO GITHUB PAGES
 **Features**: 45/45 complete (100%)
-**Last Updated**: 2025-12-09
+**Last Updated**: 2025-01-11
+
+## Recent Session - 2025-01-11
+
+### UI Layout Fix: Single Date Per Page
+
+**Issue**: User requested single date per page with combined 9 PM and 7 AM slots (no duplicates)
+
+**Changes Made**:
+1. **js/app.js**:
+   - Changed `itemsPerPage` from 2 to 1 (single date per page)
+   - Refactored to paginate by date instead of individual news items
+   - Added `groupNewsByDate()` logic in `loadInitialData()`
+   - Created `createDateCard()` function for combined slot display
+   - Updated `applyFilters()` to filter dates instead of news items
+   - Updated pagination to use `state.filteredDates` instead of `filteredNews`
+
+2. **css/main.css**:
+   - Added `.date-card` styles for combined layout
+   - Added `.date-header` with centered date display
+   - Added `.slots-container` with flex layout
+   - Added `.slot-section`, `.evening-section`, `.morning-section` styles
+   - Added responsive styles for side-by-side slots on desktop
+
+**Commit**: `26c4bb5` - feat: Single date per page with combined 9 PM and 7 AM slots
+
+### Previous Fixes This Session:
+- Fixed Gemini API format: `types.FileData(file_uri=video_url)`
+- Added retry logic for rate limits and connection errors
+- Fixed GitHub Actions permissions: `contents: write`
+- Fixed frontend data path: `./data` (relative for GitHub Pages)
+- Removed ETV branding from frontend (kept in backend patterns)
+- Restored exact video title patterns for matching
 
 ## What's Been Done
 
