@@ -29,32 +29,12 @@
     </header>
 
     <main id="main-content" aria-label="ప్రధాన కంటెంట్">
-        <aside class="sidebar" aria-label="ఫిల్టర్ ఎంపికలు">
-            <section class="filter-section">
-                <h2>ఫిల్టర్లు</h2>
-                
-                <div class="filter-group">
-                    <h3>సమయం</h3>
-                    <label>
-                        <input type="checkbox" name="slot" value="9pm" checked>
-                        <span>సాయంత్రం వార్తలు</span>
-                    </label>
-                    <label>
-                        <input type="checkbox" name="slot" value="7am" checked>
-                        <span>ఉదయం వార్తలు</span>
-                    </label>
+        <aside class="sidebar" aria-label="తేదీ ఎంపికలు">
+            <section class="dates-section">
+                <h2>తేదీలు</h2>
+                <div class="dates-list" id="dates-list" role="navigation" aria-label="వార్తల తేదీలు">
+                    <div class="loading-dates">లోడ్ అవుతోంది...</div>
                 </div>
-
-                <div class="filter-group">
-                    <h3>తేదీ పరిధి</h3>
-                    <label for="date-from">నుండి:</label>
-                    <input type="date" id="date-from" name="date-from">
-                    
-                    <label for="date-to">వరకు:</label>
-                    <input type="date" id="date-to" name="date-to">
-                </div>
-
-                <button class="apply-filters-btn">ఫిల్టర్లు వర్తించండి</button>
             </section>
         </aside>
 

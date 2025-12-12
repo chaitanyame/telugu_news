@@ -10,13 +10,7 @@ const App = (() => {
     allNews: [],           // All news items
     newsByDate: {},        // News grouped by date: { 'YYYY-MM-DD': { date, slots: { '9pm': news, '7am': news } } }
     filteredDates: [],     // Filtered date keys to display
-    currentPage: 1,
-    itemsPerPage: 1,       // 1 date per page (single date with both slots)
-    filters: {
-      slots: ['9pm', '7am'],
-      dateFrom: null,
-      dateTo: null
-    },
+    selectedDate: null,    // Currently selected date
     availableDates: [],
     loading: false
   };
@@ -31,9 +25,6 @@ const App = (() => {
     cacheElements();
     attachEventListeners();
     await loadInitialData();
-    renderStats();
-    renderNews();
-    updatePaginationControls();
   }
 
   /**
@@ -44,13 +35,7 @@ const App = (() => {
     elements.prevBtn = document.getElementById('prev-btn');
     elements.nextBtn = document.getElementById('next-btn');
     elements.pageInfo = document.getElementById('page-info');
-    elements.filterBtn = document.querySelector('.apply-filters-btn');
-    elements.dateFrom = document.getElementById('date-from');
-    elements.dateTo = document.getElementById('date-to');
-    elements.slotCheckboxes = document.querySelectorAll('input[name="slot"]');
-    elements.totalNews = document.getElementById('total-news');
-    elements.total9pm = document.getElementById('total-9pm');
-    elements.total7am = document.getElementById('total-7am');
+    elements.datesList = document.getElementById('dates-list');
   }
 
   /**
@@ -58,16 +43,8 @@ const App = (() => {
    */
   function attachEventListeners() {
     // Pagination buttons
-    elements.prevBtn?.addEventListener('click', () => changePage(-1));
-    elements.nextBtn?.addEventListener('click', () => changePage(1));
-
-    // Filter button
-    elements.filterBtn?.addEventListener('click', applyFilters);
-
-    // Slot checkboxes
-    elements.slotCheckboxes?.forEach(checkbox => {
-      checkbox.addEventListener('change', applyFilters);
-    });
+    elements.prevBtn?.addEventListener('click', () => navigateDates(-1));
+    elements.nextBtn?.addEventListener('click', () => navigateDates(1));
   }
 
   /**
@@ -122,8 +99,15 @@ const App = (() => {
       // Get sorted date keys (newest first)
       state.filteredDates = Object.keys(state.newsByDate).sort((a, b) => b.localeCompare(a));
 
-      // Apply initial filters
-      applyFilters();
+      // Select the most recent date by default
+      if (state.filteredDates.length > 0) {
+        state.selectedDate = state.filteredDates[0];
+      }
+
+      // Render the dates list and news
+      renderDatesList();
+      renderNews();
+      updatePaginationControls();
       
     } catch (error) {
       console.error('Error loading data:', error);
@@ -134,80 +118,84 @@ const App = (() => {
   }
 
   /**
+   * Render the dates list in sidebar
+   */
+  function renderDatesList() {
+    if (!elements.datesList) return;
+
+    if (state.filteredDates.length === 0) {
+      elements.datesList.innerHTML = '<p class="no-dates">తేదీలు అందుబాటులో లేవు</p>';
+      return;
+    }
+
+    elements.datesList.innerHTML = state.filteredDates.map(dateKey => {
+      const [year, month, day] = dateKey.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      const formattedDate = date.toLocaleDateString('te-IN', {
+        month: 'short',
+        day: 'numeric',
+        weekday: 'short'
+      });
+      const isSelected = dateKey === state.selectedDate;
+      return `
+        <button class="date-item ${isSelected ? 'selected' : ''}" 
+                data-date="${dateKey}"
+                aria-pressed="${isSelected}">
+          ${formattedDate}
+        </button>
+      `;
+    }).join('');
+
+    // Attach click handlers
+    elements.datesList.querySelectorAll('.date-item').forEach(btn => {
+      btn.addEventListener('click', () => selectDate(btn.dataset.date));
+    });
+  }
+
+  /**
+   * Select a specific date
+   */
+  function selectDate(dateKey) {
+    state.selectedDate = dateKey;
+    renderDatesList();
+    renderNews();
+    updatePaginationControls();
+    
+    // Scroll to news content on mobile
+    elements.newsList?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  /**
+   * Navigate between dates (prev/next)
+   */
+  function navigateDates(direction) {
+    const currentIdx = state.filteredDates.indexOf(state.selectedDate);
+    const newIdx = currentIdx + direction;
+    
+    if (newIdx >= 0 && newIdx < state.filteredDates.length) {
+      selectDate(state.filteredDates[newIdx]);
+    }
+  }
+
+  /**
    * Apply filters to news list
    */
   function applyFilters() {
-    // Get selected slots
-    const selectedSlots = Array.from(elements.slotCheckboxes || [])
-      .filter(cb => cb.checked)
-      .map(cb => cb.value);
-
-    // Get date range
-    const dateFrom = elements.dateFrom?.value;
-    const dateTo = elements.dateTo?.value;
-
-    // Filter dates based on criteria
-    state.filteredDates = Object.keys(state.newsByDate).filter(dateKey => {
-      const dateData = state.newsByDate[dateKey];
-      
-      // Check if date has at least one matching slot
-      const hasMatchingSlot = selectedSlots.length === 0 || 
-        selectedSlots.some(slot => dateData.slots[slot]);
-      
-      if (!hasMatchingSlot) return false;
-
-      // Filter by date range
-      if (dateFrom && dateKey < dateFrom) return false;
-      if (dateTo && dateKey > dateTo) return false;
-
-      return true;
-    }).sort((a, b) => b.localeCompare(a)); // Sort newest first
-
-    // Reset to first page
-    state.currentPage = 1;
-
-    // Update UI
-    renderStats();
+    renderDatesList();
     renderNews();
     updatePaginationControls();
   }
 
   /**
-   * Render statistics
-   */
-  function renderStats() {
-    // Count total slots across all filtered dates
-    let total9pm = 0;
-    let total7am = 0;
-    
-    state.filteredDates.forEach(dateKey => {
-      const dateData = state.newsByDate[dateKey];
-      if (dateData.slots['9pm']) total9pm++;
-      if (dateData.slots['7am']) total7am++;
-    });
-
-    const total = total9pm + total7am;
-
-    if (elements.totalNews) elements.totalNews.textContent = total;
-    if (elements.total9pm) elements.total9pm.textContent = total9pm;
-    if (elements.total7am) elements.total7am.textContent = total7am;
-  }
-
-  /**
-   * Render news list - one date per page with both slots
+   * Render news list - show selected date's news
    */
   function renderNews() {
     if (!elements.newsList) return;
 
-    // Calculate pagination (by date, not by individual news items)
-    const startIdx = (state.currentPage - 1) * state.itemsPerPage;
-    const endIdx = startIdx + state.itemsPerPage;
-    const datesToShow = state.filteredDates.slice(startIdx, endIdx);
-
     // Clear existing content
     elements.newsList.innerHTML = '';
 
-    if (datesToShow.length === 0) {
+    if (!state.selectedDate || !state.newsByDate[state.selectedDate]) {
       elements.newsList.innerHTML = `
         <div class="no-news" role="status">
           <p>ఎటువంటి వార్తలు అందుబాటులో లేవు</p>
@@ -216,12 +204,10 @@ const App = (() => {
       return;
     }
 
-    // Render each date's news (combined card for all slots)
-    datesToShow.forEach(dateKey => {
-      const dateData = state.newsByDate[dateKey];
-      const dateCard = createDateCard(dateData);
-      elements.newsList.appendChild(dateCard);
-    });
+    // Render selected date's news
+    const dateData = state.newsByDate[state.selectedDate];
+    const dateCard = createDateCard(dateData);
+    elements.newsList.appendChild(dateCard);
   }
 
   /**
@@ -307,39 +293,25 @@ const App = (() => {
   }
 
   /**
-   * Change page (pagination by date)
-   */
-  function changePage(direction) {
-    const totalPages = Math.ceil(state.filteredDates.length / state.itemsPerPage);
-    const newPage = state.currentPage + direction;
-
-    if (newPage < 1 || newPage > totalPages) return;
-
-    state.currentPage = newPage;
-    renderNews();
-    updatePaginationControls();
-
-    // Scroll to top of news list
-    elements.newsList?.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  /**
-   * Update pagination controls
+   * Update pagination controls (now for prev/next date navigation)
    */
   function updatePaginationControls() {
-    const totalPages = Math.ceil(state.filteredDates.length / state.itemsPerPage);
+    const currentIdx = state.filteredDates.indexOf(state.selectedDate);
+    const totalDates = state.filteredDates.length;
 
     // Update page info
     if (elements.pageInfo) {
-      elements.pageInfo.textContent = `పేజీ ${state.currentPage} / ${totalPages || 1}`;
+      elements.pageInfo.textContent = totalDates > 0 
+        ? `${currentIdx + 1} / ${totalDates} తేదీలు`
+        : '0 తేదీలు';
     }
 
-    // Update button states
+    // Update button states (prev = newer date, next = older date)
     if (elements.prevBtn) {
-      elements.prevBtn.disabled = state.currentPage <= 1;
+      elements.prevBtn.disabled = currentIdx <= 0;
     }
     if (elements.nextBtn) {
-      elements.nextBtn.disabled = state.currentPage >= totalPages;
+      elements.nextBtn.disabled = currentIdx >= totalDates - 1;
     }
   }
 
@@ -389,8 +361,8 @@ const App = (() => {
   // Public API
   return {
     init,
-    applyFilters,
-    changePage
+    selectDate,
+    navigateDates
   };
 })();
 
