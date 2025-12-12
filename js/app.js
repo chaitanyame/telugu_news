@@ -246,6 +246,19 @@ const App = (() => {
     // Build slot sections
     let slotsHtml = '';
     
+    // Helper to format news item with category styling
+    function formatNewsItem(point) {
+      const escaped = escapeHtml(point);
+      // Check if starts with a category prefix (e.g., "రాజకీయాలు:")
+      const colonIndex = escaped.indexOf(':');
+      if (colonIndex > 0 && colonIndex < 20) {
+        const category = escaped.substring(0, colonIndex);
+        const content = escaped.substring(colonIndex + 1).trim();
+        return `<span class="news-category">${category}</span><span class="news-content">${content}</span>`;
+      }
+      return `<span class="news-content">${escaped}</span>`;
+    }
+    
     // Evening news (9 PM) section
     if (dateData.slots['9pm']) {
       const evening = dateData.slots['9pm'];
@@ -255,7 +268,7 @@ const App = (() => {
             <span class="slot-badge slot-9pm">సాయంత్రం వార్తలు (9 PM)</span>
           </div>
           <ul class="news-summary">
-            ${(evening.summary || []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
+            ${(evening.summary || []).map(point => `<li>${formatNewsItem(point)}</li>`).join('')}
           </ul>
         </div>
       `;
@@ -270,7 +283,7 @@ const App = (() => {
             <span class="slot-badge slot-7am">ఉదయం వార్తలు (7 AM)</span>
           </div>
           <ul class="news-summary">
-            ${(morning.summary || []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
+            ${(morning.summary || []).map(point => `<li>${formatNewsItem(point)}</li>`).join('')}
           </ul>
         </div>
       `;
