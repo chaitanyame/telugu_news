@@ -598,14 +598,8 @@ input:focus-visible {
 }
 
 @media (min-width: 768px) {
-  .slots-container {
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-  }
-
   .slot-section:not(:last-child) {
-    border-bottom: none;
-    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
   }
 }
 
