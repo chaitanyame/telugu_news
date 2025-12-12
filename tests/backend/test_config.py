@@ -109,31 +109,6 @@ class TestGetGeminiApiKey:
             get_gemini_api_key()
 
 
-class TestGetBraveApiKey:
-    """Test get_brave_api_key function"""
-    
-    @patch.dict(os.environ, {'BRAVE_API_KEY': 'test_brave_key_789'})
-    def test_get_brave_api_key_success(self):
-        """Test successful retrieval of Brave Search API key"""
-        from scripts.utils.config import get_brave_api_key
-        key = get_brave_api_key()
-        assert key == 'test_brave_key_789'
-    
-    @patch.dict(os.environ, {}, clear=True)
-    def test_get_brave_api_key_missing(self):
-        """Test error when Brave Search API key is missing"""
-        from scripts.utils.config import get_brave_api_key
-        with pytest.raises(ValueError, match="BRAVE_API_KEY environment variable not set"):
-            get_brave_api_key()
-    
-    @patch.dict(os.environ, {'BRAVE_API_KEY': ''})
-    def test_get_brave_api_key_empty(self):
-        """Test error when Brave Search API key is empty"""
-        from scripts.utils.config import get_brave_api_key
-        with pytest.raises(ValueError, match="BRAVE_API_KEY environment variable not set"):
-            get_brave_api_key()
-
-
 class TestGetSerperApiKey:
     """Test get_serper_api_key function"""
     
