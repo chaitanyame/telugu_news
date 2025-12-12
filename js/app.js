@@ -130,12 +130,7 @@ const App = (() => {
 
     elements.datesList.innerHTML = state.filteredDates.map(dateKey => {
       const [year, month, day] = dateKey.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
-      const formattedDate = date.toLocaleDateString('te-IN', {
-        month: 'short',
-        day: 'numeric',
-        weekday: 'short'
-      });
+      const formattedDate = `${day}-${month}-${year}`;
       const isSelected = dateKey === state.selectedDate;
       return `
         <button class="date-item ${isSelected ? 'selected' : ''}" 
