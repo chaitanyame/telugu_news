@@ -232,7 +232,10 @@ const App = (() => {
     card.className = 'news-card date-card';
     card.setAttribute('role', 'article');
 
-    const date = new Date(dateData.date);
+    // Parse date correctly to avoid timezone issues
+    // dateData.date is in 'YYYY-MM-DD' format
+    const [year, month, day] = dateData.date.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
     const formattedDate = date.toLocaleDateString('te-IN', {
       year: 'numeric',
       month: 'long',
