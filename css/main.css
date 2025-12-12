@@ -154,36 +154,9 @@ header::before {
   gap: 0.75rem;
 }
 
-/* View Toggle */
+/* View Toggle - Hidden */
 .view-toggle {
-  display: flex;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-md);
-  padding: 0.25rem;
-}
-
-.view-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-light);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.view-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-white);
-}
-
-.view-btn.active {
-  background: var(--primary-color);
-  color: var(--text-white);
+  display: none;
 }
 
 /* Theme Toggle */
@@ -902,27 +875,7 @@ input:focus-visible {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* ===== Grid View Mode ===== */
-.news-list.grid-view {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.news-list.grid-view .date-card {
-  margin-bottom: 0;
-}
-
-.news-list.grid-view .slot-section .news-summary li {
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-.news-list.grid-view .slot-badge {
-  font-size: 0.8rem;
-  padding: 0.35rem 0.75rem;
-}
+/* Grid view disabled - list view only */
 
 /* ===== Load More Button ===== */
 .load-more-container {
@@ -969,75 +922,10 @@ input:focus-visible {
   color: var(--text-secondary);
 }
 
-/* ===== Category Color Coding ===== */
-.news-category {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-md);
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-right: 0.75rem;
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  white-space: nowrap;
-  color: white;
-}
-
-/* Category-specific colors */
-.news-category[data-category="రాజకీయాలు"],
-.news-category[data-category="politics"] {
-  background: linear-gradient(135deg, var(--cat-politics) 0%, #2563eb 100%);
-}
-
-.news-category[data-category="క్రీడలు"],
-.news-category[data-category="sports"] {
-  background: linear-gradient(135deg, var(--cat-sports) 0%, #16a34a 100%);
-}
-
-.news-category[data-category="వినోదం"],
-.news-category[data-category="entertainment"],
-.news-category[data-category="సినిమా"] {
-  background: linear-gradient(135deg, var(--cat-entertainment) 0%, #db2777 100%);
-}
-
-.news-category[data-category="వ్యాపారం"],
-.news-category[data-category="business"],
-.news-category[data-category="ఆర్థికం"] {
-  background: linear-gradient(135deg, var(--cat-business) 0%, #d97706 100%);
-}
-
-.news-category[data-category="నేరం"],
-.news-category[data-category="crime"],
-.news-category[data-category="నేరాలు"] {
-  background: linear-gradient(135deg, var(--cat-crime) 0%, #dc2626 100%);
-}
-
-.news-category[data-category="ఆరోగ్యం"],
-.news-category[data-category="health"] {
-  background: linear-gradient(135deg, var(--cat-health) 0%, #0d9488 100%);
-}
-
-.news-category[data-category="టెక్నాలజీ"],
-.news-category[data-category="technology"],
-.news-category[data-category="సాంకేతికం"] {
-  background: linear-gradient(135deg, var(--cat-technology) 0%, #7c3aed 100%);
-}
-
-.news-category[data-category="అంతర్జాతీయం"],
-.news-category[data-category="international"],
-.news-category[data-category="ప్రపంచం"] {
-  background: linear-gradient(135deg, var(--cat-international) 0%, #0891b2 100%);
-}
-
-.news-category[data-category="వాతావరణం"],
-.news-category[data-category="weather"] {
-  background: linear-gradient(135deg, var(--cat-weather) 0%, #4f46e5 100%);
-}
-
-/* Default category color */
-.news-category:not([data-category]) {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+/* News content styling */
+.news-content {
+  color: var(--text-primary);
+  line-height: 1.8;
 }
 
 /* ===== Mobile Bottom Navigation ===== */

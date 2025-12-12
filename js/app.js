@@ -544,17 +544,9 @@ const App = (() => {
     // Build slot sections
     let slotsHtml = '';
     
-    // Helper to format news item with category styling
+    // Helper to format news item - simple text display
     function formatNewsItem(point) {
       const escaped = escapeHtml(point);
-      // Check if starts with a category prefix (e.g., "రాజకీయాలు:")
-      const colonIndex = escaped.indexOf(':');
-      if (colonIndex > 0 && colonIndex < 20) {
-        const category = escaped.substring(0, colonIndex).trim();
-        const content = escaped.substring(colonIndex + 1).trim();
-        const categoryLower = category.toLowerCase();
-        return `<span class="news-category" data-category="${category}">${category}</span><span class="news-content">${content}</span>`;
-      }
       return `<span class="news-content">${escaped}</span>`;
     }
     
