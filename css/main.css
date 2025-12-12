@@ -131,6 +131,77 @@ main {
   height: fit-content;
 }
 
+.dates-section {
+  background: var(--bg-card);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+}
+
+.dates-section h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dates-section h2::before {
+  content: '📅';
+  font-size: 0.9rem;
+}
+
+.dates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.date-item {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.date-item:hover {
+  background: #f1f5f9;
+  border-color: var(--border-color);
+}
+
+.date-item.selected {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--text-white);
+  border-color: var(--primary-dark);
+  font-weight: 600;
+}
+
+.date-item.selected:hover {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+}
+
+.loading-dates,
+.no-dates {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
 .filter-section {
   background: var(--bg-card);
   padding: 1rem;
