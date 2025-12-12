@@ -541,14 +541,116 @@ const App = (() => {
       weekday: 'long'
     });
 
+    // Category order and colors mapping
+    const categoryOrder = [
+      'రాజకీయాలు',
+      'వ్యాపారం',
+      'నేరం',
+      'క్రీడలు',
+      'వినోదం',
+      'సినిమా',
+      'ఆరోగ్యం',
+      'వ్యవసాయం',
+      'టెక్నాలజీ',
+      'అంతర్జాతీయం',
+      'విద్య',
+      'వాతావరణం',
+      'ఇతరం'
+    ];
+
+    // Helper to extract category from news item
+    function extractCategory(point) {
+      const colonIndex = point.indexOf(':');
+      if (colonIndex > 0 && colonIndex < 30) {
+        let category = point.substring(0, colonIndex).trim();
+        // Handle sub-categories like "వ్యాపారం - ఆంధ్రప్రదేశ్"
+        const dashIndex = category.indexOf(' - ');
+        if (dashIndex > 0) {
+          category = category.substring(0, dashIndex).trim();
+        }
+        return category;
+      }
+      return 'ఇతరం';
+    }
+
+    // Helper to extract content from news item
+    function extractContent(point) {
+      const colonIndex = point.indexOf(':');
+      if (colonIndex > 0 && colonIndex < 30) {
+        return point.substring(colonIndex + 1).trim();
+      }
+      return point;
+    }
+
+    // Group news items by category
+    function groupByCategory(newsItems) {
+      const grouped = {};
+      
+      (newsItems || []).forEach(item => {
+        const category = extractCategory(item);
+        if (!grouped[category]) {
+          grouped[category] = [];
+        }
+        grouped[category].push(extractContent(item));
+      });
+
+      // Sort categories by predefined order
+      const sortedCategories = Object.keys(grouped).sort((a, b) => {
+        const indexA = categoryOrder.indexOf(a);
+        const indexB = categoryOrder.indexOf(b);
+        // If category not in order list, put it at the end
+        const orderA = indexA === -1 ? 999 : indexA;
+        const orderB = indexB === -1 ? 999 : indexB;
+        return orderA - orderB;
+      });
+
+      return { grouped, sortedCategories };
+    }
+
+    // Render grouped news
+    function renderGroupedNews(newsItems, slotClass) {
+      const { grouped, sortedCategories } = groupByCategory(newsItems);
+      
+      if (sortedCategories.length === 0) {
+        return '<p class="no-news-items">వార్తలు లేవు</p>';
+      }
+
+      return sortedCategories.map(category => {
+        const items = grouped[category];
+        const categoryClass = getCategoryClass(category);
+        return `
+          <div class="category-group ${categoryClass}">
+            <h4 class="category-header ${categoryClass}">${escapeHtml(category)}</h4>
+            <ul class="category-news-list">
+              ${items.map(content => `<li class="news-item">${escapeHtml(content)}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Get CSS class for category
+    function getCategoryClass(category) {
+      const categoryMap = {
+        'రాజకీయాలు': 'cat-politics',
+        'వ్యాపారం': 'cat-business',
+        'నేరం': 'cat-crime',
+        'క్రీడలు': 'cat-sports',
+        'వినోదం': 'cat-entertainment',
+        'సినిమా': 'cat-entertainment',
+        'ఆరోగ్యం': 'cat-health',
+        'వ్యవసాయం': 'cat-agriculture',
+        'టెక్నాలజీ': 'cat-technology',
+        'అంతర్జాతీయం': 'cat-international',
+        'విద్య': 'cat-education',
+        'వాతావరణం': 'cat-weather',
+        'ఇతరం': 'cat-other'
+      };
+      return categoryMap[category] || 'cat-other';
+    }
+
     // Build slot sections
     let slotsHtml = '';
-    
-    // Helper to format news item - simple text display
-    function formatNewsItem(point) {
-      const escaped = escapeHtml(point);
-      return `<span class="news-content">${escaped}</span>`;
-    }
     
     // Evening news (9 PM) section
     if (dateData.slots['9pm']) {
@@ -556,11 +658,11 @@ const App = (() => {
       slotsHtml += `
         <div class="slot-section evening-section">
           <div class="slot-header">
-            <span class="slot-badge slot-9pm">సాయంత్రం వార్తలు (9 PM)</span>
+            <span class="slot-badge slot-9pm">🌙 సాయంత్రం వార్తలు (9 PM)</span>
           </div>
-          <ul class="news-summary">
-            ${(evening.summary || []).map(point => `<li>${formatNewsItem(point)}</li>`).join('')}
-          </ul>
+          <div class="categorized-news">
+            ${renderGroupedNews(evening.summary, 'evening')}
+          </div>
         </div>
       `;
     }
@@ -571,11 +673,11 @@ const App = (() => {
       slotsHtml += `
         <div class="slot-section morning-section">
           <div class="slot-header">
-            <span class="slot-badge slot-7am">ఉదయం వార్తలు (7 AM)</span>
+            <span class="slot-badge slot-7am">☀️ ఉదయం వార్తలు (7 AM)</span>
           </div>
-          <ul class="news-summary">
-            ${(morning.summary || []).map(point => `<li>${formatNewsItem(point)}</li>`).join('')}
-          </ul>
+          <div class="categorized-news">
+            ${renderGroupedNews(morning.summary, 'morning')}
+          </div>
         </div>
       `;
     }
@@ -587,6 +689,7 @@ const App = (() => {
 
     card.innerHTML = `
       <div class="date-header">
+        <span class="date-icon">📰</span>
         <time datetime="${dateData.date}" class="news-date">${formattedDate}</time>
       </div>
       <div class="slots-container">
