@@ -47,7 +47,7 @@ jobs:
       
       - name: Process 9 PM news
         env:
-          BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TZ: Asia/Kolkata
         run: |

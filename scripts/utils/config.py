@@ -86,3 +86,24 @@ def get_brave_api_key() -> str:
         )
     
     return api_key
+
+
+def get_serper_api_key() -> str:
+    """
+    Get SerperDev API key from environment variables.
+    
+    Returns:
+        str: SerperDev API key
+        
+    Raises:
+        ValueError: If SERPER_API_KEY environment variable is not set or empty
+    """
+    api_key = os.environ.get('SERPER_API_KEY', '').strip()
+    
+    if not api_key:
+        raise ValueError(
+            "SERPER_API_KEY environment variable not set. "
+            "Please set it in GitHub Secrets or your local environment."
+        )
+    
+    return api_key

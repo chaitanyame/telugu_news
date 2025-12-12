@@ -4,7 +4,7 @@ Main processing script for ETV Telugu News Aggregator.
 This script orchestrates the entire pipeline:
 1. Load configuration and API keys
 2. Check if video already processed
-3. Search YouTube via Brave Search
+3. Search YouTube via SerperDev
 4. Get Gemini summary if video found
 5. Load or create news file
 6. Update news slot
@@ -22,7 +22,7 @@ from typing import Dict, Optional
 from datetime import datetime, timezone, timedelta
 from scripts.utils.config import get_gemini_api_key
 from scripts.utils.cache import is_video_processed, mark_video_processed
-from scripts.brave_fetcher import search_video
+from scripts.serper_fetcher import search_video
 from scripts.gemini_processor import get_gemini_summary
 from scripts.json_generator import (
     load_or_create_news_file,
@@ -145,7 +145,7 @@ def parse_args():
 
 def search_video_with_logging(time_slot: str, date: str, logger) -> Optional[Dict]:
     """
-    Search for video using Brave Search API.
+    Search for video using SerperDev API.
     
     Args:
         time_slot: '9pm' or '7am'
@@ -155,14 +155,14 @@ def search_video_with_logging(time_slot: str, date: str, logger) -> Optional[Dic
     Returns:
         Dict with video_id, title, published_at if found, None otherwise
     """
-    logger.info("Searching for video via Brave Search", extra={"slot": time_slot, "date": date})
+    logger.info("Searching for video via SerperDev", extra={"slot": time_slot, "date": date})
     video_data = search_video(time_slot, date)
     
     if video_data:
-        logger.info("Found video via Brave Search", extra={"video_id": video_data["video_id"]})
+        logger.info("Found video via SerperDev", extra={"video_id": video_data["video_id"]})
         return video_data
     
-    logger.warning("Video not found via Brave Search", extra={"slot": time_slot, "date": date})
+    logger.warning("Video not found via SerperDev", extra={"slot": time_slot, "date": date})
     return None
 
 
@@ -199,7 +199,7 @@ def process_time_slot(time_slot: str, date: str, force: bool = False, dry_run: b
         
         gemini_api_key = get_gemini_api_key()
         
-        # Step 2: Search for video via Brave Search
+        # Step 2: Search for video via SerperDev
         logger.info("Searching for video", extra={"slot": time_slot, "date": date})
         video_data = search_video_with_logging(time_slot, date, logger)
         

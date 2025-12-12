@@ -132,3 +132,28 @@ class TestGetBraveApiKey:
         from scripts.utils.config import get_brave_api_key
         with pytest.raises(ValueError, match="BRAVE_API_KEY environment variable not set"):
             get_brave_api_key()
+
+
+class TestGetSerperApiKey:
+    """Test get_serper_api_key function"""
+    
+    @patch.dict(os.environ, {'SERPER_API_KEY': 'test_serper_key_abc'})
+    def test_get_serper_api_key_success(self):
+        """Test successful retrieval of SerperDev API key"""
+        from scripts.utils.config import get_serper_api_key
+        key = get_serper_api_key()
+        assert key == 'test_serper_key_abc'
+    
+    @patch.dict(os.environ, {}, clear=True)
+    def test_get_serper_api_key_missing(self):
+        """Test error when SerperDev API key is missing"""
+        from scripts.utils.config import get_serper_api_key
+        with pytest.raises(ValueError, match="SERPER_API_KEY environment variable not set"):
+            get_serper_api_key()
+    
+    @patch.dict(os.environ, {'SERPER_API_KEY': ''})
+    def test_get_serper_api_key_empty(self):
+        """Test error when SerperDev API key is empty"""
+        from scripts.utils.config import get_serper_api_key
+        with pytest.raises(ValueError, match="SERPER_API_KEY environment variable not set"):
+            get_serper_api_key()
