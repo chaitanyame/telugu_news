@@ -17,7 +17,7 @@ from typing import List
 
 def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> List[str]:
     """
-    Process YouTube video and generate Telugu news summaries using Gemini API.
+    Process YouTube video and generate comprehensive Telugu news summaries using Gemini API.
     
     Args:
         video_url (str): YouTube video URL
@@ -25,7 +25,7 @@ def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> Li
         max_retries (int): Maximum number of retry attempts for rate limits
     
     Returns:
-        List[str]: List of 5-8 Telugu news bullet points
+        List[str]: List of 8-12 comprehensive Telugu news summaries with category prefixes
     
     Raises:
         ValueError: If API call fails or response is invalid
@@ -33,21 +33,28 @@ def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> Li
     # Create Gemini client
     client = genai.Client(api_key=api_key)
     
-    # Telugu prompt for news extraction
+    # Telugu prompt for comprehensive news extraction with categories
     prompt = """
-    ఈ వీడియోలో ఉన్న తెలుగు వార్తలను విశ్లేషించండి.
+    ఈ వీడియోలో ఉన్న తెలుగు వార్తలను విశ్లేషించి, సమగ్రమైన సారాంశాలను అందించండి.
     
-    దయచేసి క్రింది ఫార్మాట్‌లో JSON array రూపంలో 5-8 ముఖ్య వార్తా శీర్షికలను అందించండి:
+    దయచేసి క్రింది ఫార్మాట్‌లో JSON array రూపంలో 8-12 ముఖ్యమైన వార్తల సారాంశాలను అందించండి:
     
-    ["వార్త శీర్షిక 1", "వార్త శీర్షిక 2", "వార్త శీర్షిక 3", ...]
+    ["వర్గం: వివరణాత్మక వార్త సారాంశం", ...]
     
-    ప్రతి వార్త శీర్షిక:
+    ప్రతి వార్త సారాంశం:
     - తెలుగులో ఉండాలి
-    - స్పష్టంగా మరియు సంక్షిప్తంగా ఉండాలి (10-15 పదాలు)
-    - ముఖ్యమైన వార్తలకు ప్రాధాన్యత ఇవ్వండి
+    - వర్గం ప్రిఫిక్స్ తో ప్రారంభం (రాజకీయాలు, క్రీడలు, వ్యాపారం, నేరం, వాతావరణం, సినిమా, విద్య, ఆరోగ్యం, అంతర్జాతీయం, రవాణా, వ్యవసాయం, ఇతరం)
+    - సమగ్రంగా ఉండాలి (25-40 పదాలు)
+    - ఏమి జరిగింది, ఎవరు పాల్గొన్నారు, ఎక్కడ జరిగింది, ఎందుకు ముఖ్యమైనది అనే వివరాలు చేర్చండి
+    - ముఖ్యమైన సంఖ్యలు, పేర్లు, ప్రదేశాలు చేర్చండి
+    - ప్రాముఖ్యత క్రమంలో అమర్చండి
     - JSON array format మాత్రమే తిరిగి పంపండి, ఇతర వచనం వద్దు
     
-    ఉదాహరణ: ["తెలంగాణలో భారీ వర్షాలు", "కేంద్ర మంత్రి హైదరాబాద్ పర్యటన", "రైతులకు ప్రభుత్వం సహాయం"]
+    ఉదాహరణ: [
+        "రాజకీయాలు: తెలంగాణ పంచాయతీ ఎన్నికలు: తొలి విడతలో కాంగ్రెస్ హవా, 2303 స్థానాలు కైవసం. బీఆర్ఎస్ 1850 స్థానాలతో రెండో స్థానంలో నిలిచింది",
+        "వ్యాపారం: తెలంగాణలో అమెజాన్ భారీ పెట్టుబడి: 50 వేల కోట్లతో వెబ్ సర్వీసెస్ విస్తరణ. 10,000 మందికి ఉద్యోగ అవకాశాలు కల్పించనున్నట్లు ప్రకటన",
+        "నేరం: అల్లూరి సీతారామరాజు జిల్లాలో ఘోర రోడ్డు ప్రమాదం: 8 మంది మృతి, 15 మంది గాయాలు. స్పీడ్ వల్ల ప్రమాదం జరిగినట్లు పోలీసుల నిర్ధారణ"
+    ]
     """
     
     # Retry logic for rate limits
@@ -84,13 +91,15 @@ def get_gemini_summary(video_url: str, api_key: str, max_retries: int = 3) -> Li
                 if not isinstance(summaries, list):
                     raise ValueError("Gemini response is not a JSON array")
                 
-                if len(summaries) < 5 or len(summaries) > 8:
-                    raise ValueError(f"Expected 5-8 summaries, got {len(summaries)}")
+                if len(summaries) < 8 or len(summaries) > 12:
+                    raise ValueError(f"Expected 8-12 summaries, got {len(summaries)}")
                 
-                # Validate each summary is a string
+                # Validate each summary is a string with minimum length
                 for item in summaries:
                     if not isinstance(item, str):
                         raise ValueError("All summaries must be strings")
+                    if len(item) < 30:
+                        raise ValueError(f"Summary too short (min 30 chars): {item[:50]}")
                 
                 return summaries
             
