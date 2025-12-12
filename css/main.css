@@ -154,9 +154,36 @@ header::before {
   gap: 0.75rem;
 }
 
-/* View Toggle - Hidden */
+/* View Toggle (Desktop Only) */
 .view-toggle {
-  display: none;
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+}
+
+.view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-light);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.view-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-white);
+}
+
+.view-btn.active {
+  background: var(--primary-color);
+  color: var(--text-white);
 }
 
 /* Theme Toggle */
@@ -875,7 +902,27 @@ input:focus-visible {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Grid view disabled - list view only */
+/* ===== Grid View Mode (Desktop Only) ===== */
+.news-list.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.news-list.grid-view .date-card {
+  margin-bottom: 0;
+}
+
+.news-list.grid-view .slot-section .news-summary li {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.news-list.grid-view .slot-badge {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+}
 
 /* ===== Load More Button ===== */
 .load-more-container {
@@ -1121,6 +1168,15 @@ input:focus-visible {
 
   .view-toggle {
     display: none; /* Hide grid toggle on mobile */
+  }
+
+  /* Force list view on mobile - disable grid */
+  .news-list.grid-view {
+    display: block;
+  }
+
+  .news-list.grid-view .date-card {
+    margin-bottom: 2rem;
   }
 
   .date-header .news-date {

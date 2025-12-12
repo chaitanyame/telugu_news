@@ -26,6 +26,24 @@
             <div class="header-top">
                 <h1 class="site-title">తెలుగు వార్తలు</h1>
                 <div class="header-controls">
+                    <!-- View Mode Toggle (Desktop Only) -->
+                    <div class="view-toggle" role="group" aria-label="వీక్షణ మోడ్">
+                        <button class="view-btn active" data-view="list" aria-pressed="true" title="జాబితా వీక్షణ">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                        </button>
+                        <button class="view-btn" data-view="grid" aria-pressed="false" title="గ్రిడ్ వీక్షణ">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                            </svg>
+                        </button>
+                    </div>
                     <!-- Dark Mode Toggle -->
                     <button class="theme-toggle" id="theme-toggle" aria-label="థీమ్ మార్చండి" title="డార్క్/లైట్ మోడ్">
                         <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
