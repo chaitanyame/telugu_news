@@ -12,17 +12,27 @@ const App = (() => {
     filteredDates: [],     // Filtered date keys to display
     selectedDate: null,    // Currently selected date
     availableDates: [],
-    loading: false
+    loading: false,
+    viewMode: 'list',      // 'list' or 'grid'
+    sidebarView: 'month',  // 'month' or 'list'
+    displayedDatesCount: 5, // For load more functionality
+    theme: 'light'         // 'light' or 'dark'
   };
 
   // DOM elements (will be cached on init)
   const elements = {};
+  
+  // Touch handling for swipe gestures
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const SWIPE_THRESHOLD = 50;
 
   /**
    * Initialize the application
    */
   async function init() {
     cacheElements();
+    initTheme();
     attachEventListeners();
     await loadInitialData();
   }
@@ -36,6 +46,42 @@ const App = (() => {
     elements.nextBtn = document.getElementById('next-btn');
     elements.pageInfo = document.getElementById('page-info');
     elements.datesList = document.getElementById('dates-list');
+    elements.themeToggle = document.getElementById('theme-toggle');
+    elements.loadMoreContainer = document.getElementById('load-more-container');
+    elements.loadMoreBtn = document.getElementById('load-more-btn');
+    elements.loadMoreInfo = document.getElementById('load-more-info');
+    // Mobile elements
+    elements.mobileNav = document.getElementById('mobile-nav');
+    elements.mobileHomeBtn = document.getElementById('mobile-home-btn');
+    elements.mobileDatesBtn = document.getElementById('mobile-dates-btn');
+    elements.mobilePrevBtn = document.getElementById('mobile-prev-btn');
+    elements.mobileNextBtn = document.getElementById('mobile-next-btn');
+    elements.mobileDateModal = document.getElementById('mobile-date-modal');
+    elements.modalOverlay = document.getElementById('modal-overlay');
+    elements.modalClose = document.getElementById('modal-close');
+    elements.modalDatesList = document.getElementById('modal-dates-list');
+  }
+
+  /**
+   * Initialize theme from localStorage or system preference
+   */
+  function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      state.theme = savedTheme;
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      state.theme = 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', state.theme);
+  }
+
+  /**
+   * Toggle theme
+   */
+  function toggleTheme() {
+    state.theme = state.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', state.theme);
+    localStorage.setItem('theme', state.theme);
   }
 
   /**
@@ -45,6 +91,177 @@ const App = (() => {
     // Pagination buttons
     elements.prevBtn?.addEventListener('click', () => navigateDates(-1));
     elements.nextBtn?.addEventListener('click', () => navigateDates(1));
+    
+    // Theme toggle
+    elements.themeToggle?.addEventListener('click', toggleTheme);
+    
+    // View mode toggle
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => setViewMode(btn.dataset.view));
+    });
+    
+    // Sidebar view toggle
+    document.querySelectorAll('.sidebar-view-btn').forEach(btn => {
+      btn.addEventListener('click', () => setSidebarView(btn.dataset.sidebarView));
+    });
+    
+    // Load more button
+    elements.loadMoreBtn?.addEventListener('click', loadMoreDates);
+    
+    // Mobile navigation
+    elements.mobileHomeBtn?.addEventListener('click', () => {
+      if (state.filteredDates.length > 0) {
+        selectDate(state.filteredDates[0]);
+      }
+    });
+    elements.mobileDatesBtn?.addEventListener('click', openDateModal);
+    elements.mobilePrevBtn?.addEventListener('click', () => navigateDates(-1));
+    elements.mobileNextBtn?.addEventListener('click', () => navigateDates(1));
+    
+    // Modal controls
+    elements.modalOverlay?.addEventListener('click', closeDateModal);
+    elements.modalClose?.addEventListener('click', closeDateModal);
+    
+    // Swipe gestures for mobile
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', handleKeyboard);
+  }
+
+  /**
+   * Handle touch start for swipe detection
+   */
+  function handleTouchStart(e) {
+    touchStartX = e.changedTouches[0].screenX;
+  }
+
+  /**
+   * Handle touch end for swipe detection
+   */
+  function handleTouchEnd(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  }
+
+  /**
+   * Handle swipe gesture
+   */
+  function handleSwipe() {
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+      if (diff > 0) {
+        // Swipe left - next date (older)
+        navigateDates(1);
+      } else {
+        // Swipe right - prev date (newer)
+        navigateDates(-1);
+      }
+    }
+  }
+
+  /**
+   * Handle keyboard navigation
+   */
+  function handleKeyboard(e) {
+    if (e.key === 'ArrowLeft') {
+      navigateDates(-1);
+    } else if (e.key === 'ArrowRight') {
+      navigateDates(1);
+    } else if (e.key === 'Escape' && elements.mobileDateModal?.classList.contains('open')) {
+      closeDateModal();
+    }
+  }
+
+  /**
+   * Open date picker modal (mobile)
+   */
+  function openDateModal() {
+    if (!elements.mobileDateModal) return;
+    elements.mobileDateModal.classList.add('open');
+    elements.mobileDateModal.setAttribute('aria-hidden', 'false');
+    renderModalDates();
+    document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * Close date picker modal
+   */
+  function closeDateModal() {
+    if (!elements.mobileDateModal) return;
+    elements.mobileDateModal.classList.remove('open');
+    elements.mobileDateModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  /**
+   * Render dates in modal (grouped by month)
+   */
+  function renderModalDates() {
+    if (!elements.modalDatesList) return;
+    elements.modalDatesList.innerHTML = renderGroupedDates(state.filteredDates, true);
+    attachDateClickHandlers(elements.modalDatesList);
+  }
+
+  /**
+   * Set view mode (list/grid)
+   */
+  function setViewMode(mode) {
+    state.viewMode = mode;
+    
+    // Update button states
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === mode);
+      btn.setAttribute('aria-pressed', btn.dataset.view === mode);
+    });
+    
+    // Update news list class
+    if (elements.newsList) {
+      elements.newsList.classList.toggle('grid-view', mode === 'grid');
+    }
+  }
+
+  /**
+   * Set sidebar view mode (month/list)
+   */
+  function setSidebarView(view) {
+    state.sidebarView = view;
+    
+    // Update button states
+    document.querySelectorAll('.sidebar-view-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.sidebarView === view);
+    });
+    
+    renderDatesList();
+  }
+
+  /**
+   * Load more dates (hybrid pagination)
+   */
+  function loadMoreDates() {
+    state.displayedDatesCount += 5;
+    renderNews();
+    updateLoadMoreButton();
+  }
+
+  /**
+   * Update load more button visibility and info
+   */
+  function updateLoadMoreButton() {
+    if (!elements.loadMoreContainer) return;
+    
+    const total = state.filteredDates.length;
+    const displayed = Math.min(state.displayedDatesCount, total);
+    
+    if (displayed >= total) {
+      elements.loadMoreContainer.style.display = 'none';
+    } else {
+      elements.loadMoreContainer.style.display = 'block';
+      if (elements.loadMoreInfo) {
+        elements.loadMoreInfo.textContent = `${displayed} / ${total} తేదీలు చూపబడుతున్నాయి`;
+      }
+    }
   }
 
   /**
@@ -128,22 +345,122 @@ const App = (() => {
       return;
     }
 
-    elements.datesList.innerHTML = state.filteredDates.map(dateKey => {
-      const [year, month, day] = dateKey.split('-').map(Number);
-      const formattedDate = `${day}-${month}-${year}`;
-      const isSelected = dateKey === state.selectedDate;
+    if (state.sidebarView === 'month') {
+      elements.datesList.innerHTML = renderGroupedDates(state.filteredDates, false);
+    } else {
+      elements.datesList.innerHTML = renderFlatDates(state.filteredDates);
+    }
+
+    attachDateClickHandlers(elements.datesList);
+    attachMonthToggleHandlers();
+  }
+
+  /**
+   * Render dates grouped by month
+   */
+  function renderGroupedDates(dates, isModal = false) {
+    const grouped = {};
+    
+    dates.forEach(dateKey => {
+      const [year, month] = dateKey.split('-');
+      const monthKey = `${year}-${month}`;
+      if (!grouped[monthKey]) {
+        grouped[monthKey] = [];
+      }
+      grouped[monthKey].push(dateKey);
+    });
+
+    return Object.entries(grouped).map(([monthKey, monthDates]) => {
+      const [year, month] = monthKey.split('-');
+      const monthDate = new Date(year, month - 1, 1);
+      const monthName = monthDate.toLocaleDateString('te-IN', { 
+        year: 'numeric', 
+        month: 'long' 
+      });
+      
+      const isExpanded = monthDates.some(d => d === state.selectedDate) || monthDates[0] === dates[0];
+      
       return `
-        <button class="date-item ${isSelected ? 'selected' : ''}" 
-                data-date="${dateKey}"
-                aria-pressed="${isSelected}">
-          ${formattedDate}
-        </button>
+        <div class="month-group" data-month="${monthKey}">
+          <div class="month-header" role="button" aria-expanded="${isExpanded}">
+            <span>${monthName}</span>
+            <span class="month-count">${monthDates.length}</span>
+          </div>
+          <div class="month-dates ${isExpanded ? '' : 'collapsed'}">
+            ${monthDates.map(dateKey => renderDateItem(dateKey)).join('')}
+          </div>
+        </div>
       `;
     }).join('');
+  }
 
-    // Attach click handlers
-    elements.datesList.querySelectorAll('.date-item').forEach(btn => {
-      btn.addEventListener('click', () => selectDate(btn.dataset.date));
+  /**
+   * Render flat list of dates
+   */
+  function renderFlatDates(dates) {
+    return dates.map(dateKey => renderDateItem(dateKey)).join('');
+  }
+
+  /**
+   * Render a single date item
+   */
+  function renderDateItem(dateKey) {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    const formattedDate = date.toLocaleDateString('te-IN', {
+      month: 'short',
+      day: 'numeric',
+      weekday: 'short'
+    });
+    const isSelected = dateKey === state.selectedDate;
+    const newsCount = getNewsCountForDate(dateKey);
+    
+    return `
+      <button class="date-item ${isSelected ? 'selected' : ''}" 
+              data-date="${dateKey}"
+              aria-pressed="${isSelected}">
+        <span class="date-text">${formattedDate}</span>
+        <span class="news-count-badge" title="${newsCount} వార్తలు">${newsCount}</span>
+      </button>
+    `;
+  }
+
+  /**
+   * Get news count for a specific date
+   */
+  function getNewsCountForDate(dateKey) {
+    const dateData = state.newsByDate[dateKey];
+    if (!dateData) return 0;
+    
+    let count = 0;
+    if (dateData.slots['9pm']?.summary) count += dateData.slots['9pm'].summary.length;
+    if (dateData.slots['7am']?.summary) count += dateData.slots['7am'].summary.length;
+    return count;
+  }
+
+  /**
+   * Attach click handlers to date items
+   */
+  function attachDateClickHandlers(container) {
+    container.querySelectorAll('.date-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectDate(btn.dataset.date);
+        closeDateModal(); // Close modal if open
+      });
+    });
+  }
+
+  /**
+   * Attach toggle handlers to month headers
+   */
+  function attachMonthToggleHandlers() {
+    document.querySelectorAll('.month-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const monthDates = header.nextElementSibling;
+        const isCollapsed = monthDates.classList.contains('collapsed');
+        monthDates.classList.toggle('collapsed');
+        header.setAttribute('aria-expanded', isCollapsed);
+      });
     });
   }
 
@@ -233,9 +550,10 @@ const App = (() => {
       // Check if starts with a category prefix (e.g., "రాజకీయాలు:")
       const colonIndex = escaped.indexOf(':');
       if (colonIndex > 0 && colonIndex < 20) {
-        const category = escaped.substring(0, colonIndex);
+        const category = escaped.substring(0, colonIndex).trim();
         const content = escaped.substring(colonIndex + 1).trim();
-        return `<span class="news-category">${category}</span><span class="news-content">${content}</span>`;
+        const categoryLower = category.toLowerCase();
+        return `<span class="news-category" data-category="${category}">${category}</span><span class="news-content">${content}</span>`;
       }
       return `<span class="news-content">${escaped}</span>`;
     }
@@ -302,12 +620,26 @@ const App = (() => {
     }
 
     // Update button states (prev = newer date, next = older date)
+    const isPrevDisabled = currentIdx <= 0;
+    const isNextDisabled = currentIdx >= totalDates - 1;
+    
     if (elements.prevBtn) {
-      elements.prevBtn.disabled = currentIdx <= 0;
+      elements.prevBtn.disabled = isPrevDisabled;
     }
     if (elements.nextBtn) {
-      elements.nextBtn.disabled = currentIdx >= totalDates - 1;
+      elements.nextBtn.disabled = isNextDisabled;
     }
+    
+    // Update mobile navigation buttons
+    if (elements.mobilePrevBtn) {
+      elements.mobilePrevBtn.disabled = isPrevDisabled;
+    }
+    if (elements.mobileNextBtn) {
+      elements.mobileNextBtn.disabled = isNextDisabled;
+    }
+    
+    // Update load more button
+    updateLoadMoreButton();
   }
 
   /**
@@ -357,7 +689,11 @@ const App = (() => {
   return {
     init,
     selectDate,
-    navigateDates
+    navigateDates,
+    toggleTheme,
+    setViewMode,
+    setSidebarView,
+    loadMoreDates
   };
 })();
 
