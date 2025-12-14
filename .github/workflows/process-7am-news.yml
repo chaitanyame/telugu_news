@@ -2,9 +2,9 @@ name: Process 7 AM News
 
 on:
   schedule:
-    # Run at 11:00 PM IST (17:30 UTC) every day
-    # IST is UTC+5:30, so 11:00 PM IST = 17:30 UTC
-    - cron: '30 17 * * *'
+    # Run at 9:05 AM IST (3:35 UTC) every day
+    # IST is UTC+5:30, so 9:05 AM IST = 3:35 UTC
+    - cron: '35 3 * * *'
   
   workflow_dispatch:
     # Allow manual triggering from GitHub UI
@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   process-news:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
       - name: Checkout repository
